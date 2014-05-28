@@ -121,7 +121,7 @@ void FIR_UI::prepare()
 bool FIR_UI::canClose()
 {
 	if ( coeffE->document()->isModified() )
-		switch ( QMessageBox::question( this, "FIR", "Czy chcesz zastosować zmiany?", QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel ) )
+		switch ( QMessageBox::question( this, block.getName(), "Czy chcesz zastosować zmiany?", QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel ) )
 		{
 			case QMessageBox::Yes:
 				setFilter();

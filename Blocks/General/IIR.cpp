@@ -154,7 +154,7 @@ void IIR_UI::prepare()
 bool IIR_UI::canClose()
 {
 	if ( AcoeffE->document()->isModified() || BcoeffE->document()->isModified() )
-		switch ( QMessageBox::question( this, "IIR", "Czy chcesz zastosować zmiany?", QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel ) )
+		switch ( QMessageBox::question( this, block.getName(), "Czy chcesz zastosować zmiany?", QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel ) )
 		{
 			case QMessageBox::Yes:
 				setFilter();

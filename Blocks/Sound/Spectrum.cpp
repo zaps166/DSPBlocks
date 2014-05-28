@@ -251,8 +251,8 @@ SpectrumUI::SpectrumUI( Spectrum &block ) :
 	numSpectrumsB->setRange( 1, 9999 );
 
 	scaleB = new QDoubleSpinBox;
-	scaleB->setDecimals( 1 );
-	scaleB->setRange( 0.1, 1000.0 );
+	scaleB->setDecimals( 2 );
+	scaleB->setRange( 0.01, 1000.0 );
 	scaleB->setPrefix( "Skala: " );
 	scaleB->setSuffix( "x" );
 

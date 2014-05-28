@@ -222,9 +222,9 @@ ScopeUI::ScopeUI( Scope &block ) :
 	scaleL->setAlignment( Qt::AlignRight );
 
 	scaleB = new QDoubleSpinBox;
-	scaleB->setDecimals( 2 );
+	scaleB->setDecimals( 3 );
 	scaleB->setSingleStep( 0.01 );
-	scaleB->setRange( 0.01, 10.0 );
+	scaleB->setRange( 0.001, 100.0 );
 	scaleB->setSuffix( "x" );
 
 	xyB = new QCheckBox( "XY" );

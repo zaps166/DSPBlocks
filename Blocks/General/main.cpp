@@ -9,6 +9,7 @@
 #include "Gain.hpp"
 #include "IIR.hpp"
 #include "Integral.hpp"
+#include "JS.hpp"
 #include "Math.hpp"
 #include "Multiplier.hpp"
 #include "Muxer.hpp"
@@ -37,6 +38,7 @@ extern "C" QList< Block * > createBlocks()
 								 new Gain <<
 								 new IIR <<
 								 new Integral <<
+								 new JS <<
 								 new Math <<
 								 new Multiplier <<
 								 new Muxer <<
