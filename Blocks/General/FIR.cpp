@@ -23,16 +23,16 @@ void FIR::setSample( int input, float sample )
 void FIR::exec( Array< Sample > &samples )
 {
 	mutex.lock();
-	const float *fir_values_data = fir_coeff.data();
+	const double *fir_coeff_data = fir_coeff.data();
 	for ( int i = 0 ; i < outputsCount() ; ++i )
 	{
-		float sum = 0.0f;
+		double sum = 0.0;
 		inputBuffer[ i ].set( inputSamples[ i ] );
 		for ( int j = 0 ; j < fir_coeff.count() ; ++j )
-			if ( ( quint32 & )fir_values_data[ j ] )
-				sum += fir_values_data[ j ] * inputBuffer[ i ][ j ];
+			if ( ( quint32 & )fir_coeff_data[ j ] )
+				sum += fir_coeff_data[ j ] * inputBuffer[ i ][ j ];
 		inputBuffer[ i ].advance();
-		samples += ( Sample ){ getTarget( i ), sum };
+		samples += ( Sample ){ getTarget( i ), ( float )sum };
 	}
 	mutex.unlock();
 }
@@ -111,7 +111,7 @@ FIR_UI::FIR_UI( FIR &block ) :
 void FIR_UI::prepare()
 {
 	QString fir_coeff;
-	foreach ( float g, block.fir_coeff )
+	foreach ( double g, block.fir_coeff )
 		fir_coeff += QString( "%1\n" ).arg( g );
 	fir_coeff.chop( 1 );
 	canUpdateFilter = false;
@@ -157,23 +157,23 @@ void FIR_UI::setFilter()
 	{
 		QStringList firLines = coeffE->toPlainText().split( '\n' );
 
-		QVector< float > fir_coeff;
+		QVector< double > fir_coeff;
 		fir_coeff.reserve( firLines.count() );
 		for ( int i = firLines.count() - 1 ; i >= 0 ; --i )
 		{
-			const float val = firLines[ i ].toFloat();
-			if ( !fir_coeff.isEmpty() || val != 0.0f )
+			const double val = firLines[ i ].toDouble();
+			if ( !fir_coeff.isEmpty() || val != 0.0 )
 				fir_coeff.prepend( val );
 		}
 		if ( fir_coeff.isEmpty() )
-			fir_coeff += 0.0f;
+			fir_coeff += 0.0;
 
 		block.mutex.lock();
 		if ( block.fir_coeff != fir_coeff )
 		{
 			block.fir_coeff.clear();
 			block.fir_coeff.resize( fir_coeff.count() );
-			memcpy( block.fir_coeff.data(), fir_coeff.data(), fir_coeff.count() * sizeof( float ) );
+			memcpy( block.fir_coeff.data(), fir_coeff.data(), fir_coeff.count() * sizeof( double ) );
 			block.setInputBuffer();
 		}
 		block.mutex.unlock();

@@ -1,8 +1,6 @@
 #include "IIR.hpp"
 #include "Array.hpp"
 
-#include <QDebug>
-
 IIR::IIR() :
 	Block( "IIR", "Filtr o nieskończonej odpowiedzi impulsowej", 1, 1, PROCESSING ),
 	inputBuffer( NULL ), outputBuffer( NULL )
@@ -14,7 +12,7 @@ bool IIR::start()
 		return false;
 	settings->setRunMode( true );
 	inputBuffer = new RingBuffer< float >[ inputsCount() ];
-	outputBuffer = new RingBuffer< float >[ inputsCount() ];
+	outputBuffer = new RingBuffer< double >[ inputsCount() ];
 	inputSamples.resize( inputsCount() );
 	setInputBuffer();
 	return true;
@@ -26,18 +24,18 @@ void IIR::setSample( int input, float sample )
 void IIR::exec( Array< Sample > &samples )
 {
 	mutex.lock();
-	const float *ACoeff_data = Acoeff.data();
-	const float *BCoeff_data = Bcoeff.data();
+	const double *ACoeff_data = Acoeff.data();
+	const double *BCoeff_data = Bcoeff.data();
 	for ( int i = 0 ; i < outputsCount() ; ++i )
 	{
-		float sum = 0.0f;
+		double sum = 0.0;
 		inputBuffer[ i ].set( inputSamples[ i ] );
 		for ( int j = 0 ; j < Acoeff.count() ; ++j )
 			sum += ACoeff_data[ j ] * inputBuffer[ i ][ j ] - BCoeff_data[ j ] * outputBuffer[ i ][ j ];
 		inputBuffer[ i ].advance();
 		outputBuffer[ i ].set( sum );
 		outputBuffer[ i ].advance();
-		samples += ( Sample ){ getTarget( i ), sum };
+		samples += ( Sample ){ getTarget( i ), ( float )sum };
 	}
 	mutex.unlock();
 }
@@ -46,7 +44,8 @@ void IIR::stop()
 	settings->setRunMode( false );
 	delete[] inputBuffer;
 	delete[] outputBuffer;
-	inputBuffer = outputBuffer = NULL;
+	inputBuffer = NULL;
+	outputBuffer = NULL;
 	inputSamples.clear();
 }
 
@@ -54,8 +53,8 @@ Block *IIR::createInstance()
 {
 	IIR *block = new IIR;
 	block->settings = new Settings( *block, true, 1, maxIO, true, 1, maxIO, true, new IIR_UI( *block ) );
-	block->Acoeff.fill( 1.0f, 1 );
-	block->Bcoeff.fill( 0.0f, 1 );
+	block->Acoeff.fill( 1.0, 1 );
+	block->Bcoeff.fill( 0.0, 1 );
 	return block;
 }
 
@@ -136,14 +135,14 @@ void IIR_UI::prepare()
 
 	canUpdateFilter = false;
 
-	foreach ( float g, block.Acoeff )
+	foreach ( double g, block.Acoeff )
 		iir_coeff += QString( "%1\n" ).arg( g );
 	iir_coeff.chop( 1 );
 	AcoeffE->setPlainText( iir_coeff );
 
 	iir_coeff.clear();
 
-	foreach ( float g, block.Bcoeff )
+	foreach ( double g, block.Bcoeff )
 		iir_coeff += QString( "%1\n" ).arg( g );
 	iir_coeff.chop( 1 );
 
@@ -195,18 +194,18 @@ void IIR_UI::setFilter()
 	{
 		QStringList iir_lines[ 2 ] = { AcoeffE->toPlainText().split( '\n' ), BcoeffE->toPlainText().split( '\n' ) };
 
-		QVector< float > coeff[ 2 ];
+		QVector< double > coeff[ 2 ];
 		for ( int j = 0 ; j < 2 ; ++j )
 		{
 			coeff[ j ].reserve( iir_lines[ j ].count() );
 			for ( int i = iir_lines[ j ].count() - 1 ; i >= 0 ; --i )
 			{
-				const float val = iir_lines[ j ][ i ].toFloat();
-				if ( !coeff[ j ].isEmpty() || val != 0.0f )
+				const double val = iir_lines[ j ][ i ].toDouble();
+				if ( !coeff[ j ].isEmpty() || val != 0.0 )
 					coeff[ j ].prepend( val );
 			}
 			if ( coeff[ j ].isEmpty() )
-				coeff[ j ].append( 0.0f );
+				coeff[ j ].append( 0.0 );
 		}
 
 		/* Ilość współczynników A musi być taka sama jak współczynników B */
@@ -217,7 +216,7 @@ void IIR_UI::setFilter()
 			int aS = coeff[ 0 ].count();
 			coeff[ 0 ].resize( coeff[ 1 ].count() );
 			for ( int i = aS ; i < coeff[ 0 ].count() ; ++i )
-				coeff[ 0 ][ i ] = 1.0f;
+				coeff[ 0 ][ i ] = 1.0;
 		}
 
 		block.mutex.lock();
@@ -227,8 +226,8 @@ void IIR_UI::setFilter()
 			block.Bcoeff.clear();
 			block.Acoeff.resize( coeff[ 0 ].count() );
 			block.Bcoeff.resize( coeff[ 1 ].count() );
-			memcpy( block.Acoeff.data(), coeff[ 0 ].data(), coeff[ 0 ].count() * sizeof( float ) );
-			memcpy( block.Bcoeff.data(), coeff[ 1 ].data(), coeff[ 1 ].count() * sizeof( float ) );
+			memcpy( block.Acoeff.data(), coeff[ 0 ].data(), coeff[ 0 ].count() * sizeof( double ) );
+			memcpy( block.Bcoeff.data(), coeff[ 1 ].data(), coeff[ 1 ].count() * sizeof( double ) );
 			block.setInputBuffer();
 		}
 		block.mutex.unlock();
