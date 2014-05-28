@@ -4,7 +4,7 @@
 #endif
 #include "Equalizer.hpp"
 #include "FFMpegIn.hpp"
-#include <Image.hpp>
+#include "Image.hpp"
 #include "PortAudioIn.hpp"
 #include "PortAudioOut.hpp"
 #include "Spectrum.hpp"

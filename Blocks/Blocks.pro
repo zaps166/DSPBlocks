@@ -1,2 +1,2 @@
 TEMPLATE = subdirs
-SUBDIRS = General Sound Logic LADSPA
+SUBDIRS = General Sound Logic LADSPA RT
