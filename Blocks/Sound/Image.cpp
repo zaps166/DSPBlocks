@@ -248,7 +248,7 @@ void ImageUI::itemsVisible()
 
 void ImageUI::browseFile()
 {
-	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik dźwiękowy", fileE->text() );
+	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik obrazka", fileE->text() );
 	if ( !newFile.isEmpty() )
 		fileE->setText( newFile );
 }

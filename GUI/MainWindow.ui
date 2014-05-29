@@ -167,9 +167,15 @@
     <addaction name="separator"/>
     <addaction name="action_Ustawienia"/>
    </widget>
+   <widget class="QMenu" name="menu_Dodatki">
+    <property name="title">
+     <string>&amp;Dodatki</string>
+    </property>
+   </widget>
    <addaction name="menu_Plik"/>
    <addaction name="menu_Edycja"/>
    <addaction name="menu_Symulacja"/>
+   <addaction name="menu_Dodatki"/>
    <addaction name="menu_Pomoc"/>
   </widget>
   <action name="actionStart">

@@ -5,16 +5,16 @@
 #include "Thread.hpp"
 #include "Scene.hpp"
 
-#include <QSettings>
 #include <QStack>
 
+class QSettings;
 class Scene;
 
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT
 public:
-	MainWindow( QWidget *parent = NULL );
+	MainWindow( QSettings &settings, QWidget *parent = NULL );
 	~MainWindow();
 private slots:
 	void threadStopped();
@@ -54,7 +54,7 @@ private:
 	Scene scene;
 	Thread thread;
 	QString projectFile;
-	QSettings settings;
+	QSettings &settings;
 	float simulationTime;
 	QList< Block * > allBlocks;
 	QStack< QByteArray > undoSteps, redoSteps;

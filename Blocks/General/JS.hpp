@@ -3,7 +3,7 @@
 
 #include "Block.hpp"
 
-#include <QtScript/QScriptEngine>
+#include <QScriptEngine>
 #include <QMutex>
 
 class JS : public Block
@@ -22,7 +22,7 @@ private:
 	void serialize( QDataStream &ds ) const;
 	void deSerialize( QDataStream &ds );
 
-	bool compile();
+	bool compile( bool showErr = true );
 
 	void setLabel();
 

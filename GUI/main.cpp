@@ -1,6 +1,7 @@
 #include "MainWindow.hpp"
 
 #include <QApplication>
+#include <QSettings>
 #if QT_VERSION < 0x050000
 	#include <QTextCodec>
 #endif
@@ -11,6 +12,8 @@ int main( int argc, char *argv[] )
 	QTextCodec::setCodecForCStrings( QTextCodec::codecForName( "UTF-8" ) );
 #endif
 	QApplication app( argc, argv );
-	new MainWindow;
+	app.setQuitOnLastWindowClosed( false );
+	QSettings settings( QSettings::IniFormat, QSettings::UserScope, "MusicBlocks" );
+	new MainWindow( settings );
 	return app.exec();
 }

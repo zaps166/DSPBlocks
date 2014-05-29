@@ -1,3 +1,3 @@
 TEMPLATE = subdirs
 CONFIG += ordered
-SUBDIRS = Lib GUI Blocks
+SUBDIRS = Lib GUI Blocks Additions

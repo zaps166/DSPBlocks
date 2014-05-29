@@ -1,6 +1,8 @@
 #include "JS.hpp"
 #include "Array.hpp"
 
+#include <QMessageBox>
+
 JS::JS() :
 	Block( "JavaScript", "Wprowadzanie kodu w języku JavaScript", 1, 1, PROCESSING ),
 	code2( "output_samples = input_samples.slice();" )
@@ -14,7 +16,7 @@ bool JS::start()
 	for ( int i = 0 ; i < inputsCount() ; ++i )
 		input_samples.setProperty( i, 0.0f );
 
-	return compile();
+	return compile( false );
 }
 void JS::setSample( int input, float sample )
 {
@@ -52,7 +54,7 @@ void JS::deSerialize( QDataStream &ds )
 	setLabel();
 }
 
-bool JS::compile()
+bool JS::compile( bool showErr )
 {
 	scriptE.evaluate
 	(
@@ -67,6 +69,13 @@ bool JS::compile()
 			"return output_samples;"
 		"}"
 	);
+	if ( scriptE.hasUncaughtException() )
+	{
+		mainFunc = QScriptValue();
+		if ( showErr )
+			QMessageBox::warning( ( QWidget * )qApp->property( "MainWindow" ).value< void * >(), getName(), scriptE.uncaughtException().toString() );
+		return false;
+	}
 	mainFunc = scriptE.globalObject().property( "main" );
 	return true;
 }

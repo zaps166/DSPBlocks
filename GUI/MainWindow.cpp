@@ -5,6 +5,7 @@
 #include <QCloseEvent>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QSettings>
 #include <QLibrary>
 #include <QDebug>
 #include <QFile>
@@ -27,9 +28,9 @@ static bool blockIDLessThan( const Block *s1, const Block *s2 )
 	return s1->getID() < s2->getID();
 }
 
-MainWindow::MainWindow( QWidget *parent ) :
+MainWindow::MainWindow( QSettings &settings, QWidget *parent ) :
 	QMainWindow( parent ),
-	settings( QSettings::IniFormat, QSettings::UserScope, "MusicBlocks" ),
+	settings( settings ),
 	simulationTime( 0.0f )
 {
 	setAttribute( Qt::WA_DeleteOnClose );
@@ -50,6 +51,7 @@ MainWindow::MainWindow( QWidget *parent ) :
 
 	ui.graphicsView->setScene( &scene );
 
+	/* Ładowanie bloczków */
 	const QString blocksPath = qApp->property( "share" ).toString() + "/blocks";
 	foreach ( QString fName, QDir( blocksPath ).entryList( QStringList() << LIBS_FILTER ) )
 	{
@@ -78,6 +80,48 @@ MainWindow::MainWindow( QWidget *parent ) :
 
 	ui.splitter->setSizes( QList< int >() << 140 << width() - 140 );
 
+	/* Ładowanie dodatków */
+	QList< QAction * > actions;
+	const QString additionsPath = qApp->property( "share" ).toString() + "/additions";
+	foreach ( QString fName, QDir( additionsPath ).entryList( QStringList() << LIBS_FILTER ) )
+	{
+		QLibrary lib( additionsPath + '/' + fName );
+		if ( !lib.load() )
+			qDebug() << lib.errorString();
+		else
+		{
+			typedef QList< QAction * >( *GetActions )( QSettings & );
+			GetActions getActions = ( GetActions )lib.resolve( "getActions" );
+			if ( !getActions )
+				lib.unload();
+			else foreach ( QAction *act, getActions( settings ) )
+				if ( act )
+				{
+					if ( !act->parentWidget() )
+						act->setParent( ui.menu_Dodatki );
+					else
+					{
+						act->parentWidget()->setParent( this );
+						act->parentWidget()->setWindowFlags( Qt::Window );
+					}
+					actions += act;
+				}
+		}
+	}
+	if ( actions.isEmpty() )
+		ui.menu_Dodatki->deleteLater();
+	else
+	{
+		qStableSort( actions );
+		int key_num = 0;
+		foreach ( QAction *act, actions )
+		{
+			if ( key_num < 9 )
+				act->setShortcut( QKeySequence( QString( "Ctrl+%1" ).arg( ++key_num ) ) );
+			ui.menu_Dodatki->addAction( act );
+		}
+	}
+
 	connect( ui.actionO_Qt, SIGNAL( triggered() ), qApp, SLOT( aboutQt() ) );
 	connect( &thread, SIGNAL( finished() ), this, SLOT( threadStopped() ) );
 	connect( &scene, SIGNAL( saveState() ), this, SLOT( saveState() ) );
@@ -85,22 +129,24 @@ MainWindow::MainWindow( QWidget *parent ) :
 	prepareUndoRedo();
 
 	ui.graphicsView->setFocus();
-	restoreGeometry( settings.value( "GUI/MainWinGeo" ).toByteArray() );
-	ui.splitter->restoreState( settings.value( "GUI/SplitterState" ).toByteArray() );
+	restoreGeometry( settings.value( "MainWindow/MainWinGeo" ).toByteArray() );
+	ui.splitter->restoreState( settings.value( "MainWindow/SplitterState" ).toByteArray() );
 	show();
 
-	loadFile( settings.value( "ProjectFile" ).toString() );
+	loadFile( settings.value( "MainWindow/ProjectFile" ).toString() );
 }
 MainWindow::~MainWindow()
 {
 	disconnect( &thread, SIGNAL( finished() ), this, SLOT( threadStopped() ) );
 
-	settings.setValue( "ProjectFile", projectFile );
-	settings.setValue( "GUI/MainWinGeo", saveGeometry() );
-	settings.setValue( "GUI/SplitterState", ui.splitter->saveState() );
+	settings.setValue( "MainWindow/ProjectFile", projectFile );
+	settings.setValue( "MainWindow/MainWinGeo", saveGeometry() );
+	settings.setValue( "MainWindow/SplitterState", ui.splitter->saveState() );
 
 	thread.stop();
 	threadStopped();
+
+	qApp->quit();
 }
 
 void MainWindow::threadStopped()
