@@ -23,16 +23,26 @@ void FIR::setSample( int input, float sample )
 void FIR::exec( Array< Sample > &samples )
 {
 	mutex.lock();
-	const double *fir_coeff_data = fir_coeff.data();
+	const float *fir_coeff_data = fir_coeff.data();
 	for ( int i = 0 ; i < outputsCount() ; ++i )
 	{
-		double sum = 0.0;
+		float sum = 0.0;
 		inputBuffer[ i ].set( inputSamples[ i ] );
-		for ( int j = 0 ; j < fir_coeff.count() ; ++j )
-			if ( ( quint32 & )fir_coeff_data[ j ] )
-				sum += fir_coeff_data[ j ] * inputBuffer[ i ][ j ];
+
+		float *chunk1, *chunk2;
+		int s1, s2;
+
+		inputBuffer[ i ].getChunks( chunk1, s1, chunk2, s2 );
+
+		int j, k;
+		for ( j = 0 ; j < s1 ; ++j )
+			sum += fir_coeff_data[ j ] * chunk1[ j ];
+		k = j;
+		for ( j = 0 ; j < s2 ; ++j, ++k )
+			sum += fir_coeff_data[ k ] * chunk2[ j ];
+
 		inputBuffer[ i ].advance();
-		samples += ( Sample ){ getTarget( i ), ( float )sum };
+		samples += ( Sample ){ getTarget( i ), sum };
 	}
 	mutex.unlock();
 }
@@ -111,7 +121,7 @@ FIR_UI::FIR_UI( FIR &block ) :
 void FIR_UI::prepare()
 {
 	QString fir_coeff;
-	foreach ( double g, block.fir_coeff )
+	foreach ( float g, block.fir_coeff )
 		fir_coeff += QString( "%1\n" ).arg( g );
 	fir_coeff.chop( 1 );
 	canUpdateFilter = false;
@@ -157,11 +167,11 @@ void FIR_UI::setFilter()
 	{
 		QStringList firLines = coeffE->toPlainText().split( '\n' );
 
-		QVector< double > fir_coeff;
+		QVector< float > fir_coeff;
 		fir_coeff.reserve( firLines.count() );
 		for ( int i = firLines.count() - 1 ; i >= 0 ; --i )
 		{
-			const double val = firLines[ i ].toDouble();
+			const float val = firLines[ i ].toFloat();
 			if ( !fir_coeff.isEmpty() || val != 0.0 )
 				fir_coeff.prepend( val );
 		}
@@ -173,7 +183,7 @@ void FIR_UI::setFilter()
 		{
 			block.fir_coeff.clear();
 			block.fir_coeff.resize( fir_coeff.count() );
-			memcpy( block.fir_coeff.data(), fir_coeff.data(), fir_coeff.count() * sizeof( double ) );
+			memcpy( block.fir_coeff.data(), fir_coeff.data(), fir_coeff.count() * sizeof( float ) );
 			block.setInputBuffer();
 		}
 		block.mutex.unlock();

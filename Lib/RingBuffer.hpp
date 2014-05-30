@@ -49,25 +49,39 @@ public:
 	inline void advance()
 	{
 		if ( --p < 0 )
-			p = s-1;
+			p = s - 1;
 	}
 
 	inline void operator +=( const T &t )
 	{
 		set( t );
-		p = ( p + 1 ) % s;
+		if ( ++p >= s )
+			p = 0;
 	}
 	inline T get()
 	{
 		const int last_p = p;
-		p = ( p + 1 ) % s;
+		if ( ++p >= s )
+			p = 0;
 		return d[ last_p ];
 	}
 
 	inline T &operator []( int idx )
 	{
-		const int o = p + idx;
-		return d[ ( o >= 0 ? o : s + o ) % s ];
+		int o = p + idx;
+		while ( o < 0 )
+			o += s;
+		while ( o >= s )
+			o -= s;
+		return d[ o ];
+	}
+
+	inline void getChunks( T *&chunk1, int &s1, T *&chunk2, int &s2 )
+	{
+		chunk1 = d + p;
+		s1 = s - p;
+		chunk2 = d;
+		s2 = s - s1;
 	}
 private:
 	RingBuffer( const RingBuffer & );
