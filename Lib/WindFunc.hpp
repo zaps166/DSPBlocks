@@ -10,7 +10,7 @@ class WindFunc : public QFrame
 {
 	Q_OBJECT
 public:
-	enum WindType { Rectangle, Hamming, Hanning, Bartlett, Triangle, Bartlett_Hanning, Blackman, Nuttall, Blackman_Harris, Blackman_Nuttall, FlatTop };
+	enum WindType { Rectangle, Welch, Hamming, Hanning, Bartlett, Triangle, Bartlett_Hanning, Blackman, Nuttall, Blackman_Harris, Blackman_Nuttall, FlatTop };
 	static inline QString getWindowFunction( WindType t )
 	{
 		return windFunc[ t ];
@@ -33,8 +33,10 @@ public:
 
 	QVector< double > getWindowFunctionCoefficient( int N );
 private slots:
-	void windTypeChanged( int idx );
+	void windFuncChanged( int idx );
 	void setUserWindFunc();
+signals:
+	void windFuncChanged();
 private:
 	static const QStringList windFunc;
 

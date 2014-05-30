@@ -19,6 +19,14 @@ private slots:
 	void on_srateB_valueChanged( int hz );
 	void on_textEditB_toggled( bool b );
 	void on_coeffGenB_clicked();
+	void on_liveUpdateB_clicked( bool b );
+	void on_toClipboardB_clicked( bool b );
+	void on_numCoeffB_editingFinished();
+	void on_cutF1B_valueChanged( int hz );
+	void on_cutF2B_valueChanged( int hz );
+
+	void updateFreqs();
+	void genCoeffsIfCan();
 private:
 	void mousePressEvent( QMouseEvent *e );
 	void closeEvent( QCloseEvent *e );

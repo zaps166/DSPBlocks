@@ -11,10 +11,8 @@ MOC_DIR = build/moc
 INCLUDEPATH += ../../Lib
 DEPENDPATH  += ../../Lib
 
-HEADERS += \           
-    FIR_Designer.hpp
-SOURCES += main.cpp \
-    FIR_Designer.cpp
+HEADERS +=          FIR_Designer.hpp
+SOURCES += main.cpp FIR_Designer.cpp
 
 win32: {
 	QMAKE_LIBDIR += ../../App

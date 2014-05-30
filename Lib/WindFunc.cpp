@@ -2,14 +2,15 @@
 
 #include <QScriptEngine>
 
-#define WindCosine( a ) "Math.cos( "a" * Math.PI * n / ( N - 1 ) )"
+#define WindCosine( a ) "Math.cos( "a" * Math.PI * n / ( N - 1.0 ) )"
 
 const QStringList WindFunc::windFunc = QStringList()
 		<< "1.0"
+		<< "1.0 - Math.pow( ( n - ( N - 1 ) / 2.0 ) / ( ( N + 1.0 ) / 2 ), 2.0 )"
 		<< "0.53836 - 0.46164 * "WindCosine( "2.0" )
-		<< "0.5 - 0.5 * "WindCosine( "2.0" )
-		<< "( N - 1 ) / 2.0 - Math.abs( n - ( N - 1 ) / 2.0 )"
-		<< "N / 2.0 - Math.abs( n - ( N - 1 ) / 2.0 )"
+		<< "0.5 * ( 1.0 - "WindCosine( "2.0" )" )"
+		<< "1.0 - Math.abs( ( n - ( N - 1 ) / 2.0 ) / ( ( N - 1 ) / 2.0 ) )"
+		<< "1.0 - Math.abs( ( n - ( N - 1 ) / 2.0 ) / ( N / 2.0 ) )"
 		<< "0.62 - 0.48 * Math.abs( n / ( N - 1 ) - 0.5 ) - 0.38 * "WindCosine( "2.0" )
 		<< "0.42 - 0.5 * "WindCosine( "2.0" )" + 0.08 * "WindCosine( "4.0" )
 		<< "0.355768 - 0.487396 * "WindCosine( "2.0" )" + 0.144232 * "WindCosine( "4.0" )" - 0.012604 * "WindCosine( "6.0" )
@@ -20,10 +21,20 @@ const QStringList WindFunc::windFunc = QStringList()
 
 QVector< double > WindFunc::windowFunctionCoefficient( const QString &code, int N, QString *err )
 {
+	int halfN = N / 2;
+
 	QScriptEngine scriptE;
-	scriptE.evaluate( "function genWindFunc( N ) { var windF = new Array( N ); for ( var n = 0 ; n < N ; ++n ) windF[ n ] = " + code + "; return windF; }" );
+	scriptE.evaluate
+	(
+		"function genWindFunc( N, halfN ) {"
+			"var windF = new Array( halfN + 1 );"
+			"for ( var n = 0 ; n <= halfN ; ++n )"
+			"windF[ n ] = " + code + ";"
+			"return windF;"
+		"}"
+	);
 	QScriptValue genWindFunc = scriptE.globalObject().property( "genWindFunc" );
-	QVariantList windF = genWindFunc.call( QScriptValue(), QScriptValueList() << N ).toVariant().toList();
+	QVariantList windF = genWindFunc.call( QScriptValue(), QScriptValueList() << N << halfN ).toVariant().toList();
 
 	if ( err )
 	{
@@ -34,11 +45,11 @@ QVector< double > WindFunc::windowFunctionCoefficient( const QString &code, int 
 
 	QVector< double > coeff;
 
-	if ( windF.count() == N )
+	if ( windF.count() == halfN + 1 )
 	{
 		coeff.resize( N );
-		for ( int i = 0 ; i < coeff.count() ; ++i )
-			coeff[ i ] = windF[ i ].toDouble();
+		for ( int n = 0 ; n <= halfN ; ++n )
+			coeff[ n ] = coeff[ N - 1 - n ] = windF[ n ].toDouble();
 	}
 
 	return coeff;
@@ -62,6 +73,7 @@ WindFunc::WindFunc( QWidget *parent ) :
 	windTypeCB->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Fixed );
 	windTypeCB->addItems( QStringList()
 		<< "Prostokątne"
+		<< "Welcha"
 		<< "Hamminga"
 		<< "Hanninga"
 		<< "Bartletta"
@@ -84,10 +96,10 @@ WindFunc::WindFunc( QWidget *parent ) :
 	layout->addWidget( windFuncE, 1, 0, 1, 2 );
 	layout->setMargin( 3 );
 
-	connect( windTypeCB, SIGNAL( currentIndexChanged( int ) ), this, SLOT( windTypeChanged( int ) ) );
+	connect( windTypeCB, SIGNAL( currentIndexChanged( int ) ), this, SLOT( windFuncChanged( int ) ) );
 	connect( windFuncE, SIGNAL( editingFinished() ), this, SLOT( setUserWindFunc() ) );
 
-	windTypeCB->setCurrentIndex( Bartlett_Hanning );
+	windTypeCB->setCurrentIndex( Hamming );
 }
 
 int WindFunc::getWindTypeIdx() const
@@ -109,13 +121,15 @@ QVector< double > WindFunc::getWindowFunctionCoefficient( int N )
 	return coeff;
 }
 
-void WindFunc::windTypeChanged( int idx )
+void WindFunc::windFuncChanged( int idx )
 {
 	bool isUserWindFunc = idx == windTypeCB->count() - 1;
 	windFuncE->setText( isUserWindFunc ? userWindFunc : windFunc[ idx ] );
 	windFuncE->setEnabled( isUserWindFunc );
+	emit windFuncChanged();
 }
 void WindFunc::setUserWindFunc()
 {
 	userWindFunc = windFuncE->text();
+	emit windFuncChanged();
 }

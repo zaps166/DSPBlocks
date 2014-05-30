@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>454</width>
-    <height>413</height>
+    <width>580</width>
+    <height>470</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,39 +26,30 @@
    <property name="bottomMargin">
     <number>3</number>
    </property>
-   <item row="2" column="0" colspan="3">
-    <widget class="QSpinBox" name="numCoeffB">
-     <property name="prefix">
-      <string>Ilość współczynników: </string>
-     </property>
-     <property name="minimum">
-      <number>5</number>
-     </property>
-     <property name="maximum">
-      <number>10000</number>
-     </property>
-     <property name="value">
-      <number>50</number>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0" colspan="3">
-    <widget class="QSpinBox" name="srateB">
+   <property name="spacing">
+    <number>3</number>
+   </property>
+   <item row="1" column="0" colspan="2">
+    <widget class="QSpinBox" name="cutoffB">
      <property name="suffix">
       <string> Hz</string>
      </property>
      <property name="prefix">
-      <string>Częstotliwość próbkowania: </string>
+      <string>Częstotliwość graniczna: </string>
      </property>
      <property name="minimum">
-      <number>2</number>
-     </property>
-     <property name="maximum">
-      <number>1000000000</number>
+      <number>1</number>
      </property>
     </widget>
    </item>
-   <item row="6" column="0" colspan="3">
+   <item row="14" column="1" colspan="2">
+    <widget class="QPushButton" name="coeffGenB">
+     <property name="text">
+      <string>Wy&amp;generuj współczynniki filtru</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0" colspan="3">
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -71,44 +62,24 @@
      </property>
     </spacer>
    </item>
-   <item row="9" column="1" colspan="2">
-    <widget class="QPushButton" name="coeffGenB">
-     <property name="text">
-      <string>Wy&amp;generuj współczynniki filtru</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0" colspan="3">
-    <widget class="QSpinBox" name="precissionB">
+   <item row="3" column="0" colspan="2">
+    <widget class="QSpinBox" name="numCoeffB">
      <property name="prefix">
-      <string>Precyzja: </string>
+      <string>Ilość współczynników: </string>
      </property>
      <property name="minimum">
-      <number>1</number>
+      <number>5</number>
      </property>
      <property name="maximum">
-      <number>25</number>
+      <number>20000</number>
      </property>
      <property name="value">
-      <number>10</number>
+      <number>251</number>
      </property>
     </widget>
    </item>
-   <item row="7" column="0" colspan="3">
-    <widget class="QCheckBox" name="toClipboardB">
-     <property name="text">
-      <string>&amp;Kopiuj wygenerowane współczynniki do schowka</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="0" colspan="3">
+   <item row="0" column="2" rowspan="7">
     <widget class="QGroupBox" name="groupBox">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
      <property name="title">
       <string>Typ filtru</string>
      </property>
@@ -138,6 +109,13 @@
         </property>
        </widget>
       </item>
+      <item row="2" column="0">
+       <widget class="QRadioButton" name="bandPassB">
+        <property name="text">
+         <string>Środkowoprzepustowy</string>
+        </property>
+       </widget>
+      </item>
       <item row="1" column="0">
        <widget class="QRadioButton" name="highPassB">
         <property name="text">
@@ -145,19 +123,26 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="0">
+       <widget class="QRadioButton" name="bandStopB">
+        <property name="text">
+         <string>Środkowozaporowy</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
-   <item row="8" column="0" colspan="3">
+   <item row="10" column="0" rowspan="2" colspan="2">
     <widget class="QGroupBox" name="textEditB">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
      <property name="title">
-      <string>&amp;Wprowadzaj wygenerowane współczynniki do pola tekstowego</string>
+      <string>&amp;Wprowadzaj współczynniki do pola tekstowego</string>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -188,6 +173,13 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Wybrane pole tekstowe:</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="1">
        <widget class="QLabel" name="textEditChoosedL">
         <property name="sizePolicy">
@@ -201,30 +193,81 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Wybrane pole tekstowe:</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>
-   <item row="1" column="0" colspan="3">
-    <widget class="QSpinBox" name="cutoffB">
+   <item row="0" column="0" colspan="2">
+    <widget class="QSpinBox" name="srateB">
      <property name="suffix">
       <string> Hz</string>
      </property>
      <property name="prefix">
-      <string>Częstotliwość graniczna: </string>
+      <string>Częstotliwość próbkowania: </string>
      </property>
      <property name="minimum">
-      <number>1</number>
+      <number>2</number>
+     </property>
+     <property name="maximum">
+      <number>1000000000</number>
      </property>
     </widget>
    </item>
-   <item row="9" column="0">
+   <item row="4" column="0" colspan="2">
+    <widget class="QDoubleSpinBox" name="rippleB">
+     <property name="prefix">
+      <string>Falowanie (ripple): </string>
+     </property>
+     <property name="minimum">
+      <double>0.010000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
+     </property>
+     <property name="value">
+      <double>0.500000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0" colspan="3">
+    <widget class="WindFunc" name="windFuncW" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="2">
+    <widget class="QCheckBox" name="toClipboardB">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>&amp;Kopiuj współczynniki do schowka</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="2">
+    <widget class="QCheckBox" name="liveUpdateB">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Live update</string>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="0">
     <widget class="QPushButton" name="closeB">
      <property name="text">
       <string>&amp;Zamknij</string>
@@ -234,14 +277,70 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="0" colspan="3">
-    <widget class="WindFunc" name="windFuncW" native="true">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+   <item row="5" column="0" colspan="2">
+    <widget class="QSpinBox" name="precissionB">
+     <property name="prefix">
+      <string>Precyzja: </string>
      </property>
+     <property name="minimum">
+      <number>2</number>
+     </property>
+     <property name="maximum">
+      <number>10</number>
+     </property>
+     <property name="value">
+      <number>6</number>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <widget class="QGroupBox" name="bandFreqsB">
+     <property name="title">
+      <string>Przepuszczaj/blokuj częstotliwości</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="spacing">
+       <number>3</number>
+      </property>
+      <property name="leftMargin">
+       <number>2</number>
+      </property>
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="rightMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
+      <item>
+       <widget class="QSpinBox" name="cutF1B">
+        <property name="suffix">
+         <string> Hz</string>
+        </property>
+        <property name="prefix">
+         <string>Od: </string>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="cutF2B">
+        <property name="suffix">
+         <string> Hz</string>
+        </property>
+        <property name="prefix">
+         <string>Do: </string>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>
@@ -252,18 +351,25 @@
    <extends>QWidget</extends>
    <header>WindFunc.hpp</header>
    <container>1</container>
+   <slots>
+    <signal>windFuncChanged()</signal>
+   </slots>
   </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>srateB</tabstop>
   <tabstop>cutoffB</tabstop>
   <tabstop>numCoeffB</tabstop>
+  <tabstop>rippleB</tabstop>
   <tabstop>precissionB</tabstop>
   <tabstop>lowPassB</tabstop>
   <tabstop>highPassB</tabstop>
-  <tabstop>toClipboardB</tabstop>
+  <tabstop>bandPassB</tabstop>
+  <tabstop>bandStopB</tabstop>
   <tabstop>textEditB</tabstop>
   <tabstop>textEditChooseB</tabstop>
+  <tabstop>toClipboardB</tabstop>
+  <tabstop>liveUpdateB</tabstop>
   <tabstop>coeffGenB</tabstop>
   <tabstop>closeB</tabstop>
  </tabstops>
@@ -276,8 +382,8 @@
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>335</x>
-     <y>542</y>
+     <x>171</x>
+     <y>466</y>
     </hint>
     <hint type="destinationlabel">
      <x>335</x>
@@ -285,5 +391,137 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>bandPassB</sender>
+   <signal>clicked()</signal>
+   <receiver>FIR_Designer</receiver>
+   <slot>updateFreqs()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>461</x>
+     <y>120</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>289</x>
+     <y>234</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>bandStopB</sender>
+   <signal>clicked()</signal>
+   <receiver>FIR_Designer</receiver>
+   <slot>updateFreqs()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>461</x>
+     <y>156</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>289</x>
+     <y>234</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lowPassB</sender>
+   <signal>clicked()</signal>
+   <receiver>FIR_Designer</receiver>
+   <slot>updateFreqs()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>461</x>
+     <y>48</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>289</x>
+     <y>234</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>highPassB</sender>
+   <signal>clicked()</signal>
+   <receiver>FIR_Designer</receiver>
+   <slot>updateFreqs()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>461</x>
+     <y>84</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>289</x>
+     <y>234</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cutoffB</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>FIR_Designer</receiver>
+   <slot>genCoeffsIfCan()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>173</x>
+     <y>40</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>289</x>
+     <y>234</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>rippleB</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>FIR_Designer</receiver>
+   <slot>genCoeffsIfCan()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>173</x>
+     <y>145</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>289</x>
+     <y>234</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>precissionB</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>FIR_Designer</receiver>
+   <slot>genCoeffsIfCan()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>173</x>
+     <y>171</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>289</x>
+     <y>234</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>windFuncW</sender>
+   <signal>windFuncChanged()</signal>
+   <receiver>FIR_Designer</receiver>
+   <slot>genCoeffsIfCan()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>289</x>
+     <y>233</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>289</x>
+     <y>234</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
+ <slots>
+  <slot>updateFreqs()</slot>
+  <slot>genCoeffsIfCan()</slot>
+ </slots>
 </ui>
