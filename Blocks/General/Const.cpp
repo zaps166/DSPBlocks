@@ -3,7 +3,8 @@
 
 Const::Const() :
 	Block( "Const", "Generuje stałą liczbę", 0, 1, SOURCE ),
-	output( 1.0f )
+	output( 1.0f ),
+	integerSpinBox( false )
 {}
 
 bool Const::start()
@@ -31,11 +32,11 @@ Block *Const::createInstance()
 
 void Const::serialize( QDataStream &ds ) const
 {
-	ds << output;
+	ds << output << integerSpinBox;
 }
 void Const::deSerialize( QDataStream &ds )
 {
-	ds >> output;
+	ds >> output >> integerSpinBox;
 	setLabel();
 }
 
@@ -46,6 +47,7 @@ void Const::setLabel()
 }
 
 #include <QDoubleSpinBox>
+#include <QCheckBox>
 #include <QLayout>
 #include <QLabel>
 
@@ -57,25 +59,36 @@ ConstUI::ConstUI( Const &block ) :
 	numberL->setSizePolicy( QSizePolicy::Maximum, QSizePolicy::Expanding );
 
 	numberB = new QDoubleSpinBox;
-	numberB->setDecimals( 4 );
-	numberB->setSingleStep( 0.01 );
 	numberB->setRange( -1000000.0, 1000000.0 );
 
-	QHBoxLayout *layout = new QHBoxLayout( this );
-	layout->addWidget( numberL );
-	layout->addWidget( numberB );
-	layout->setMargin( 3 );
+	integerB = new QCheckBox( "Liczby całkowite" );
 
-	connect( numberB, SIGNAL( valueChanged( double ) ), this, SLOT( setValue( double ) ) );
+	QGridLayout *layout = new QGridLayout( this );
+	layout->addWidget( numberL, 0, 0, 1, 1 );
+	layout->addWidget( numberB, 0, 1, 1, 1 );
+	layout->addWidget( integerB, 1, 0, 1, 2 );
+	layout->setMargin( 3 );
 }
 
 void ConstUI::prepare()
 {
 	numberB->setValue( block.output );
+	integerB->setChecked( block.integerSpinBox );
+
+	connect( numberB, SIGNAL( valueChanged( double ) ), this, SLOT( setValue( double ) ) );
+	connect( integerB, SIGNAL( toggled( bool ) ), this, SLOT( integerToggled( bool ) ) );
+
+	integerToggled( integerB->isChecked() );
 }
 
 void ConstUI::setValue( double v )
 {
 	block.output = v;
 	block.setLabel();
+}
+void ConstUI::integerToggled( bool b )
+{
+	numberB->setDecimals( b ? 0 : 4 );
+	numberB->setSingleStep( b ? 1.0 : 0.01 );
+	block.integerSpinBox = b;
 }

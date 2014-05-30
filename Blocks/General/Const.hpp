@@ -21,11 +21,13 @@ private:
 	void setLabel();
 
 	float output;
+	bool integerSpinBox;
 };
 
 #include "Settings.hpp"
 
 class QDoubleSpinBox;
+class QCheckBox;
 
 class ConstUI : public AdditionalSettings
 {
@@ -36,10 +38,12 @@ public:
 	void prepare();
 private slots:
 	void setValue( double v );
+	void integerToggled( bool b );
 private:
 	Const &block;
 
 	QDoubleSpinBox *numberB;
+	QCheckBox *integerB;
 };
 
 #endif // CONST_HPP
