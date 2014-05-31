@@ -2,6 +2,7 @@
 #include "Block.hpp"
 
 #include <QPlainTextEdit>
+#include <QMessageBox>
 #include <QClipboard>
 #include <QSettings>
 #include <QDebug>
@@ -12,18 +13,19 @@ FIR_Designer::FIR_Designer( QSettings &settings ) :
 	settings( settings )
 {
 	ui.setupUi( this );
-	ui.rippleB->hide(); //TODO - Kaiser window
+
+	ui.windFuncW->setKaiserEditEnabled( false );
 
 	ui.srateB->setValue( Block::getSampleRate() );
 	ui.cutoffB->setValue( ui.srateB->value() / 48 );
 	ui.cutF2B->setValue( ui.srateB->value() / 24 );
 	ui.cutF1B->setValue( ui.srateB->value() / 48 );
 
-	ui.windFuncW->setUserWindFunc( settings.value( "FIR_Designer/UserWindFunc", "1.0" ).toString() );
-	ui.windFuncW->setWindTypeIdx( settings.value( "FIR_Designer/WindTypeIdx", 0 ).toInt() );
-
 	setFirCoeffE( NULL );
 	updateFreqs();
+
+	ui.windFuncW->setUserWindFunc( settings.value( "FIR_Designer/UserWindFunc", "1.0" ).toString() );
+	ui.windFuncW->setWindTypeIdx( settings.value( "FIR_Designer/WindTypeIdx", 0 ).toInt() );
 }
 FIR_Designer::~FIR_Designer()
 {
@@ -176,12 +178,38 @@ void FIR_Designer::updateFreqs()
 		ui.cutoffB->hide();
 	}
 	on_numCoeffB_editingFinished();
-	genCoeffsIfCan();
+}
+void FIR_Designer::calcKaiserBeta()
+{
+	double dw = 2.0 * M_PI * ui.transitionWidthB->value() / ui.srateB->value(); // Calculate delta w
+	double a = -20.0 * log10( ui.rippleB->value() ); // Calculate ripple dB
+	int m = a > 21 ? ceil( ( a - 7.95 ) / ( 2.285 * dw ) ) : ceil( 5.79 / dw ); // Calculate filter order
+	if ( a <= 21 )
+		ui.windFuncW->setKaiserBeta( 0.0 );
+	else if ( a <= 50 )
+		ui.windFuncW->setKaiserBeta( 0.5842 * pow( a - 21.0, 0.4 ) + 0.07886 * ( a - 21.0 ) );
+	else
+		ui.windFuncW->setKaiserBeta( 0.1102 * ( a - 8.7 ) );
+	int numCoeff = m + 1;
+	if ( numCoeff > ui.numCoeffB->maximum() )
+		QMessageBox::information( this, "Okno Kaisera", "Za duża ilość współczynników, filtr będzie nieprawidłowy.\nZmień parametry!" );
+	ui.numCoeffB->setValue( m + 1 );
+	on_numCoeffB_editingFinished(); /* Żeby była nieparzysta liczba współczynników wtedy, kiedy trzeba */
 }
 void FIR_Designer::genCoeffsIfCan()
 {
 	if ( ui.liveUpdateB->isChecked() )
 		on_coeffGenB_clicked();
+}
+void FIR_Designer::windFuncChanged( bool isKaiser )
+{
+	ui.rippleB->setEnabled( isKaiser );
+	ui.transitionWidthB->setEnabled( isKaiser );
+	ui.numCoeffB->setDisabled( isKaiser );
+	if ( isKaiser )
+		calcKaiserBeta();
+	else
+		genCoeffsIfCan();
 }
 
 void FIR_Designer::mousePressEvent( QMouseEvent *e )
@@ -215,5 +243,7 @@ void FIR_Designer::on_srateB_valueChanged( int hz )
 {
 	ui.cutoffB->setMaximum( hz / 2 );
 	ui.cutF2B->setMaximum( hz / 2 );
+	if ( ui.transitionWidthB->isEnabled() )
+		calcKaiserBeta();
 	genCoeffsIfCan();
 }

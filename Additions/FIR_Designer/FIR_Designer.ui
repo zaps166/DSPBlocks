@@ -29,7 +29,7 @@
    <property name="spacing">
     <number>3</number>
    </property>
-   <item row="8" column="0" colspan="3">
+   <item row="13" column="0" colspan="3">
     <widget class="QFrame" name="frame">
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
@@ -95,7 +95,7 @@
      </property>
     </widget>
    </item>
-   <item row="13" column="1" colspan="2">
+   <item row="18" column="1" colspan="2">
     <widget class="QPushButton" name="coeffGenB">
      <property name="text">
       <string>Wy&amp;generuj współczynniki filtru</string>
@@ -111,33 +111,30 @@
       <number>5</number>
      </property>
      <property name="maximum">
-      <number>20000</number>
+      <number>100000</number>
      </property>
      <property name="value">
       <number>251</number>
      </property>
     </widget>
    </item>
-   <item row="4" column="0" colspan="2">
-    <widget class="QDoubleSpinBox" name="rippleB">
+   <item row="0" column="0" colspan="2">
+    <widget class="QSpinBox" name="srateB">
+     <property name="suffix">
+      <string> Hz</string>
+     </property>
      <property name="prefix">
-      <string>Falowanie (ripple): </string>
+      <string>Częstotliwość próbkowania: </string>
      </property>
      <property name="minimum">
-      <double>0.010000000000000</double>
+      <number>2</number>
      </property>
      <property name="maximum">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="singleStep">
-      <double>0.010000000000000</double>
-     </property>
-     <property name="value">
-      <double>0.500000000000000</double>
+      <number>1000000000</number>
      </property>
     </widget>
    </item>
-   <item row="0" column="2" rowspan="7">
+   <item row="0" column="2" rowspan="12">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Typ filtru</string>
@@ -192,7 +189,7 @@
      </layout>
     </widget>
    </item>
-   <item row="9" column="0" rowspan="2" colspan="2">
+   <item row="14" column="0" rowspan="2" colspan="2">
     <widget class="QGroupBox" name="textEditB">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -255,26 +252,7 @@
      </layout>
     </widget>
    </item>
-   <item row="0" column="0" colspan="2">
-    <widget class="QSpinBox" name="srateB">
-     <property name="suffix">
-      <string> Hz</string>
-     </property>
-     <property name="prefix">
-      <string>Częstotliwość próbkowania: </string>
-     </property>
-     <property name="minimum">
-      <number>2</number>
-     </property>
-     <property name="maximum">
-      <number>1000000000</number>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="0" colspan="3">
-    <widget class="WindFunc" name="windFuncW" native="true"/>
-   </item>
-   <item row="9" column="2">
+   <item row="14" column="2">
     <widget class="QCheckBox" name="toClipboardB">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -287,7 +265,7 @@
      </property>
     </widget>
    </item>
-   <item row="10" column="2">
+   <item row="15" column="2">
     <widget class="QCheckBox" name="liveUpdateB">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -300,29 +278,13 @@
      </property>
     </widget>
    </item>
-   <item row="13" column="0">
+   <item row="18" column="0">
     <widget class="QPushButton" name="closeB">
      <property name="text">
       <string>&amp;Zamknij</string>
      </property>
      <property name="shortcut">
       <string>Esc</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0" colspan="2">
-    <widget class="QSpinBox" name="precissionB">
-     <property name="prefix">
-      <string>Precyzja: </string>
-     </property>
-     <property name="minimum">
-      <number>2</number>
-     </property>
-     <property name="maximum">
-      <number>10</number>
-     </property>
-     <property name="value">
-      <number>6</number>
      </property>
     </widget>
    </item>
@@ -376,6 +338,72 @@
      </layout>
     </widget>
    </item>
+   <item row="5" column="0" colspan="2">
+    <widget class="QDoubleSpinBox" name="rippleB">
+     <property name="prefix">
+      <string>Falowanie (ripple): </string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="minimum">
+      <double>0.001000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>0.089000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.001000000000000</double>
+     </property>
+     <property name="value">
+      <double>0.089000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0" colspan="2">
+    <widget class="QDoubleSpinBox" name="transitionWidthB">
+     <property name="prefix">
+      <string>Szerokość przejścia: </string>
+     </property>
+     <property name="suffix">
+      <string> Hz</string>
+     </property>
+     <property name="decimals">
+      <number>1</number>
+     </property>
+     <property name="minimum">
+      <double>2.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>1000.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>50.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0" colspan="3">
+    <widget class="WindFunc" name="windFuncW" native="true"/>
+   </item>
+   <item row="6" column="0" colspan="2">
+    <widget class="QSpinBox" name="precissionB">
+     <property name="prefix">
+      <string>Precyzja: </string>
+     </property>
+     <property name="minimum">
+      <number>2</number>
+     </property>
+     <property name="maximum">
+      <number>10</number>
+     </property>
+     <property name="value">
+      <number>6</number>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -385,7 +413,7 @@
    <header>WindFunc.hpp</header>
    <container>1</container>
    <slots>
-    <signal>windFuncChanged()</signal>
+    <signal>windFuncChanged(bool)</signal>
    </slots>
   </customwidget>
   <customwidget>
@@ -398,7 +426,10 @@
  <tabstops>
   <tabstop>srateB</tabstop>
   <tabstop>cutoffB</tabstop>
+  <tabstop>cutF1B</tabstop>
+  <tabstop>cutF2B</tabstop>
   <tabstop>numCoeffB</tabstop>
+  <tabstop>transitionWidthB</tabstop>
   <tabstop>rippleB</tabstop>
   <tabstop>precissionB</tabstop>
   <tabstop>lowPassB</tabstop>
@@ -514,7 +545,7 @@
    <sender>rippleB</sender>
    <signal>valueChanged(double)</signal>
    <receiver>FIR_Designer</receiver>
-   <slot>genCoeffsIfCan()</slot>
+   <slot>calcKaiserBeta()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>173</x>
@@ -544,9 +575,9 @@
   </connection>
   <connection>
    <sender>windFuncW</sender>
-   <signal>windFuncChanged()</signal>
+   <signal>windFuncChanged(bool)</signal>
    <receiver>FIR_Designer</receiver>
-   <slot>genCoeffsIfCan()</slot>
+   <slot>windFuncChanged(bool)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>289</x>
@@ -558,9 +589,27 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>transitionWidthB</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>FIR_Designer</receiver>
+   <slot>calcKaiserBeta()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>173</x>
+     <y>145</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>289</x>
+     <y>234</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>updateFreqs()</slot>
   <slot>genCoeffsIfCan()</slot>
+  <slot>calcKaiserBeta()</slot>
+  <slot>windFuncChanged(bool)</slot>
  </slots>
 </ui>

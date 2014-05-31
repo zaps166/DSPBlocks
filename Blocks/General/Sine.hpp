@@ -3,7 +3,6 @@
 
 #include "Block.hpp"
 
-#include "RingBuffer.hpp"
 #include <QMutex>
 
 class Sine : public Block
@@ -23,8 +22,6 @@ private:
 
 	void serialize( QDataStream &ds ) const;
 	void deSerialize( QDataStream &ds );
-
-	RingBuffer<float> aaa;
 
 	double lastPos;
 	float hz, phase;

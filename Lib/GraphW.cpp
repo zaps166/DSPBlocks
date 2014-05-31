@@ -7,7 +7,9 @@
 
 GraphW::GraphW( QWidget *parent ) :
 	QWidget( parent )
-{}
+{
+	setStyle( &style );
+}
 
 void GraphW::set_y_samples( const QVector< double > &y_samples )
 {

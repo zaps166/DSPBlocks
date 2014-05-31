@@ -26,7 +26,9 @@ private slots:
 	void on_cutF2B_valueChanged( int hz );
 
 	void updateFreqs();
+	void calcKaiserBeta();
 	void genCoeffsIfCan();
+	void windFuncChanged( bool isKaiser );
 private:
 	void mousePressEvent( QMouseEvent *e );
 	void closeEvent( QCloseEvent *e );

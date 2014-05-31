@@ -1,6 +1,7 @@
 #ifndef GRAPHW_HPP
 #define GRAPHW_HPP
 
+#include <QCommonStyle>
 #include <QWidget>
 
 class GraphW : public QWidget
@@ -13,6 +14,7 @@ public:
 private:
 	void paintEvent( QPaintEvent * );
 
+	QCommonStyle style;
 	QPainterPath path;
 	float min, max;
 };
