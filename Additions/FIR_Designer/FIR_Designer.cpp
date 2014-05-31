@@ -114,6 +114,8 @@ void FIR_Designer::on_coeffGenB_clicked()
 	for ( int i = 0 ; i < coeff.count() ; ++i )
 		coeff[ i ] *= wind_coeff[ i ];
 
+	ui.graphW->set_y_samples( coeff );
+
 	if ( firCoeffE || ui.toClipboardB->isChecked() )
 	{
 		QString coeff_str;
