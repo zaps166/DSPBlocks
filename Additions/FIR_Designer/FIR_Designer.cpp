@@ -24,8 +24,13 @@ FIR_Designer::FIR_Designer( QSettings &settings ) :
 	setFirCoeffE( NULL );
 	updateFreqs();
 
-	ui.windFuncW->setUserWindFunc( settings.value( "FIR_Designer/UserWindFunc", "1.0" ).toString() );
-	ui.windFuncW->setWindTypeIdx( settings.value( "FIR_Designer/WindTypeIdx", 0 ).toInt() );
+	QString userWindFunc = settings.value( "FIR_Designer/UserWindFunc" ).toString();
+	int windTypeIdx = settings.value( "FIR_Designer/WindTypeIdx", -1 ).toInt();
+
+	if ( !userWindFunc.isEmpty() )
+		ui.windFuncW->setUserWindFunc( userWindFunc );
+	if ( windTypeIdx > -1 )
+		ui.windFuncW->setWindTypeIdx( windTypeIdx );
 }
 FIR_Designer::~FIR_Designer()
 {
