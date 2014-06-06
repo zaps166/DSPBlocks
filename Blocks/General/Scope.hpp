@@ -31,6 +31,7 @@ private:
 	void closeEvent( QCloseEvent *event );
 	void showEvent( QShowEvent *event );
 
+	quint8 interp;
 	int samplesVisible;
 	float scale;
 	bool xy, fallingSlope;
@@ -72,6 +73,7 @@ private slots:
 private:
 	void checkXY( int numInputs );
 
+	QComboBox *interpolationCB;
 	QSpinBox *samplesVisibleB;
 	QDoubleSpinBox *scaleB;
 	QCheckBox *xyB;

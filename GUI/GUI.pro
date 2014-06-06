@@ -9,6 +9,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TEMPLATE = app
 TARGET = MusicBlocks
 
+CONFIG += console
+
 win32: DESTDIR = ../App
 else:  DESTDIR = ../App/bin
 

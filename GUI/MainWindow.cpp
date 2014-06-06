@@ -199,7 +199,7 @@ void MainWindow::on_actionZapisz_triggered()
 }
 void MainWindow::on_actionZapisz_jako_triggered()
 {
-	QString fName = QFileDialog::getSaveFileName( this, "Wybierz plik schematu", QFileInfo( projectFile ).path(), "Schematy (*.mblcks)" );
+	QString fName = QFileDialog::getSaveFileName( this, "Wybierz plik schematu", projectFile.isEmpty() ? QString() : QFileInfo( projectFile ).path(), "Schematy (*.mblcks)" );
 	if ( !fName.isEmpty() )
 	{
 		projectFile = fName;

@@ -22,10 +22,10 @@ void Sine::exec( Array< Sample > &samples )
 	switch ( square )
 	{
 		case 1:
-			sine_sample = sine_sample >= 0.0f ? 1.0f : 0.0f;
+			sine_sample = sine_sample > 0.0f ? 1.0f : 0.0f;
 			break;
 		case 2:
-			sine_sample = sine_sample >= 0.0f ? 1.0f : -1.0f;
+			sine_sample = sine_sample > 0.0f ? 1.0f : -1.0f;
 			break;
 	}
 	++lastPos;

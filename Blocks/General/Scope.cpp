@@ -18,6 +18,7 @@ static inline qreal clip( double v )
 
 Scope::Scope() :
 	Block( "Scope", "Oscyloskop", 1, 1, SINK ),
+	interp( 1 ),
 	samplesVisible( 1024 ),
 	scale( 1.0f ),
 	xy( false ),
@@ -110,11 +111,11 @@ Block *Scope::createInstance()
 
 void Scope::serialize( QDataStream &ds ) const
 {
-	ds << xy << samplesVisible << scale << fallingSlope << triggerChn << triggerPos;
+	ds << xy << interp << samplesVisible << scale << fallingSlope << triggerChn << triggerPos;
 }
 void Scope::deSerialize( QDataStream &ds )
 {
-	ds >> xy >> samplesVisible >> scale >> fallingSlope >> triggerChn >> triggerPos;
+	ds >> xy >> interp >> samplesVisible >> scale >> fallingSlope >> triggerChn >> triggerPos;
 }
 
 void Scope::inputsCountChanged( int num )
@@ -139,7 +140,11 @@ void Scope::setSamples( int from )
 	{
 		paths[ i ].moveTo( 0.0, -clip( buffer[ i ][ from ] * scale ) + 1.0 );
 		for ( int j = 1 ; j < samplesVisible ; ++j )
+		{
+			if ( !interp )
+				paths[ i ].lineTo( j, -clip( buffer[ i ][ j+from-1 ] * scale ) + 1.0 );
 			paths[ i ].lineTo( j, -clip( buffer[ i ][ j+from ] * scale ) + 1.0 );
+		}
 	}
 	QTimer::singleShot( 0, this, SLOT( update() ) );
 }
@@ -151,7 +156,7 @@ void Scope::paintEvent( QPaintEvent * )
 	{
 		QPainter p( this );
 		if ( !xy )
-			p.scale( ( width() - 1 ) / ( paths[ 0 ].elementCount() - 1.0 ), ( height() - 1 ) / 2.0 / paths.count() );
+			p.scale( ( width() - 1 ) / ( samplesVisible - 1.0 ), ( height() - 1 ) / 2.0 / paths.count() );
 		else
 		{
 			const int s = width() > height() ? height() : width();
@@ -163,12 +168,12 @@ void Scope::paintEvent( QPaintEvent * )
 			if ( !xy )
 			{
 				p.setPen( QPen( QColor( 102, 51, 128 ), 0.0 ) );
-				p.drawLine( QLineF( 0.0, 1.0, paths[ i ].elementCount(), 1.0 ) );
+				p.drawLine( QLineF( 0.0, 1.0, samplesVisible, 1.0 ) );
 
 				if ( triggerChn == i+1 )
 				{
 					p.setPen( QPen( QColor( 50, 100, 150 ), 0.0, Qt::DotLine ) );
-					p.drawLine( QLineF( 0.0, 1.0 - triggerPos, paths[ i ].elementCount(), 1.0 - triggerPos ) );
+					p.drawLine( QLineF( 0.0, 1.0 - triggerPos, samplesVisible, 1.0 - triggerPos ) );
 				}
 			}
 			p.setPen( QPen( QColor( 102, 179, 102 ), 0.0 ) );
@@ -215,6 +220,12 @@ ScopeUI::ScopeUI( Scope &block ) :
 	QLabel *samplesVisibleL = new QLabel( "Ilość widocznych próbek: " );
 	samplesVisibleL->setAlignment( Qt::AlignRight );
 
+	QLabel *interpolationL = new QLabel( "Interpolacja: " );
+	interpolationL->setAlignment( Qt::AlignRight );
+
+	interpolationCB = new QComboBox;
+	interpolationCB->addItems( QStringList() << "Zero order hold" << "Liniowa" );
+
 	samplesVisibleB = new QSpinBox;
 	samplesVisibleB->setRange( 2, Block::getSampleRate() * 2 );
 
@@ -256,13 +267,15 @@ ScopeUI::ScopeUI( Scope &block ) :
 	QPushButton *applyB = new QPushButton( "&Zastosuj" );
 
 	QGridLayout *layout = new QGridLayout( this );
-	layout->addWidget( samplesVisibleL, 0, 0, 1, 1 );
-	layout->addWidget( samplesVisibleB, 0, 1, 1, 1 );
-	layout->addWidget( scaleL, 1, 0, 1, 1 );
-	layout->addWidget( scaleB, 1, 1, 1, 1 );
-	layout->addWidget( xyB, 2, 1, 1, 1 );
-	layout->addWidget( triggerB, 3, 0, 1, 2 );
-	layout->addWidget( applyB, 4, 0, 1, 2 );
+	layout->addWidget( interpolationL, 0, 0, 1, 1 );
+	layout->addWidget( interpolationCB, 0, 1, 1, 1 );
+	layout->addWidget( samplesVisibleL, 1, 0, 1, 1 );
+	layout->addWidget( samplesVisibleB, 1, 1, 1, 1 );
+	layout->addWidget( scaleL, 2, 0, 1, 1 );
+	layout->addWidget( scaleB, 2, 1, 1, 1 );
+	layout->addWidget( xyB, 3, 1, 1, 1 );
+	layout->addWidget( triggerB, 4, 0, 1, 2 );
+	layout->addWidget( applyB, 5, 0, 1, 2 );
 	layout->setMargin( 3 );
 
 	connect( applyB, SIGNAL( clicked() ), this, SLOT( apply() ) );
@@ -270,6 +283,7 @@ ScopeUI::ScopeUI( Scope &block ) :
 
 void ScopeUI::prepare()
 {
+	interpolationCB->setCurrentIndex( block.interp );
 	samplesVisibleB->setValue( block.samplesVisible );
 	scaleB->setValue( block.scale );
 
@@ -277,6 +291,7 @@ void ScopeUI::prepare()
 	if ( xyB->isEnabled() )
 	{
 		xyB->setChecked( block.xy );
+		interpolationCB->setDisabled( block.xy );
 		samplesVisibleB->setDisabled( block.xy );
 		triggerB->setDisabled( block.xy );
 	}
@@ -303,6 +318,7 @@ void ScopeUI::inputsCountChanged( int num )
 
 void ScopeUI::xyToggled( bool b )
 {
+	interpolationCB->setDisabled( b );
 	samplesVisibleB->setDisabled( b );
 	triggerB->setDisabled( b );
 	if ( block.xy != b )
@@ -327,6 +343,7 @@ void ScopeUI::setTrigger()
 void ScopeUI::apply()
 {
 	block.mutex.lock();
+	block.interp = interpolationCB->currentIndex();
 	if ( block.samplesVisible != samplesVisibleB->value() && !block.xy )
 	{
 		block.samplesVisible = samplesVisibleB->value();
