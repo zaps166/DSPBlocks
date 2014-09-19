@@ -13,6 +13,7 @@ bool FileReader::start()
 		settings->setRunMode( true );
 		return true;
 	}
+	err = "Nie można otworzyć pliku!";
 	return false;
 }
 void FileReader::exec( Array< Sample > &samples )

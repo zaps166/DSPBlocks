@@ -13,6 +13,7 @@ bool FileWriter::start()
 		buffer.resize( inputsCount() );
 		return true;
 	}
+	err = "Nie można otworzyć pliku!";
 	return false;
 }
 void FileWriter::setSample( int input, float sample )
