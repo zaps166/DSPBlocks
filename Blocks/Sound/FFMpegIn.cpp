@@ -111,7 +111,7 @@ void FFMpegDec::run()
 #ifdef Q_OS_LINUX
 		sched_param param = { 1 };
 		if ( pthread_setschedparam( pthread_self(), SCHED_RR, &param ) )
-			perror( "Nie można ustawić SCHED_RR dla wątku FFMPEG" );
+			perror( "Nie można ustawić SCHED_RR dla wątku FFMpeg" );
 		else
 #endif
 			setPriority( HighestPriority );
@@ -193,7 +193,8 @@ void FFMpegDec::run()
 FFMpegIn::FFMpegIn() :
 	Block( "FFMpeg input", "Odtwarza pliki dźwiękowe", 0, 1, SOURCE ),
 	ffdec( *this ),
-	loop( false )
+	loop( false ),
+	highPriority( false )
 {}
 
 bool FFMpegIn::start()
@@ -300,6 +301,7 @@ void FFMpegInUI::prepare()
 {
 	fileE->setText( block.file );
 	loopCB->setChecked( block.loop );
+	priorityCB->setChecked( block.highPriority );
 }
 void FFMpegInUI::setRunMode( bool b )
 {
