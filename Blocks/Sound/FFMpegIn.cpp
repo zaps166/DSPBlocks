@@ -15,8 +15,8 @@ extern "C"
 	#include <sched.h>
 #endif
 
-FFMpegDec::FFMpegDec( FFMpegIn &ffmpegIn ) :
-	ffmpegIn( ffmpegIn ),
+FFMpegDec::FFMpegDec( FFMpegIn &block ) :
+	block( block ),
 	fmtCtx( NULL ), aStream( NULL ), aCodec( NULL ), swr( NULL ),
 	frame( ( AVFrame * )av_mallocz( sizeof *frame ) ),
 	canGetBuffer( false )
@@ -29,10 +29,10 @@ FFMpegDec::~FFMpegDec()
 bool FFMpegDec::start()
 {
 	lastTime = get_buffer_idx = buffers_available = 0;
-	canGetBuffer = true;
+	canGetBuffer = stopped = true;
 	seekTo = -1;
 	br = false;
-	if ( avformat_open_input( &fmtCtx, ffmpegIn.file, NULL, NULL ) == 0 && avformat_find_stream_info( fmtCtx, NULL ) >= 0 )
+	if ( avformat_open_input( &fmtCtx, block.file, NULL, NULL ) == 0 && avformat_find_stream_info( fmtCtx, NULL ) >= 0 )
 	{
 		for ( unsigned i = 0 ; i < fmtCtx->nb_streams ; ++i )
 			if ( fmtCtx->streams[ i ]->codec->codec_type == AVMEDIA_TYPE_AUDIO )
@@ -44,11 +44,11 @@ bool FFMpegDec::start()
 		{
 			aCodec = aStream->codec;
 			channels = aCodec->channels;
-			swr = swr_alloc_set_opts( NULL, av_get_default_channel_layout( ffmpegIn.outputsCount() ), AV_SAMPLE_FMT_FLT, Block::getSampleRate(), av_get_default_channel_layout( channels ), aCodec->sample_fmt, aCodec->sample_rate, 0, NULL );
+			swr = swr_alloc_set_opts( NULL, av_get_default_channel_layout( block.outputsCount() ), AV_SAMPLE_FMT_FLT, Block::getSampleRate(), av_get_default_channel_layout( channels ), aCodec->sample_fmt, aCodec->sample_rate, 0, NULL );
 			av_opt_set_int( swr, "linear_interp", true, 0 );
 			if ( !swr_init( swr ) )
 			{
-				dynamic_cast< FFMpegInUI * >( ffmpegIn.settings->getAdditionalSettings() )->setMaxTime( ( duration = fmtCtx->duration / AV_TIME_BASE ) );
+				dynamic_cast< FFMpegInUI * >( block.settings->getAdditionalSettings() )->setMaxTime( ( duration = fmtCtx->duration / AV_TIME_BASE ) );
 				QThread::start();
 				return true;
 			}
@@ -58,10 +58,10 @@ bool FFMpegDec::start()
 }
 void FFMpegDec::stop()
 {
-	ffmpegIn.mutex.lock();
+	block.mutex.lock();
 	canGetBuffer = false;
-	ffmpegIn.outBuffer = NULL;
-	ffmpegIn.mutex.unlock();
+	block.outBuffer = NULL;
+	block.mutex.unlock();
 	if ( isRunning() )
 	{
 		br = true;
@@ -80,20 +80,26 @@ void FFMpegDec::stop()
 
 const float *FFMpegDec::getBuffer()
 {
-	const float *buffer = NULL;
 	buffer_mutex.lock();
-	if ( !buffers_available || !canGetBuffer )
-		buffer_mutex.unlock();
-	else
+	if ( !canGetBuffer || ( !buffers_available && block.nonblocking ) )
 	{
 		buffer_mutex.unlock();
-		ffmpegIn.outBufferSize = outBufferSamples[ get_buffer_idx ];
-		buffer = outBuffer[ get_buffer_idx ].data();
-		ffmpegIn.outBufferPos = 0;
+		return NULL;
+	}
+	if ( !buffers_available && !stopped )
+		get_buffer_cond.wait( &buffer_mutex );
+	if ( buffers_available )
+	{
+		buffer_mutex.unlock();
+		block.outBufferSize = outBufferSamples[ get_buffer_idx ];
+		const float *buffer = outBuffer[ get_buffer_idx ].data();
+		block.outBufferPos = 0;
 		if ( ++get_buffer_idx == NUM_BUFFERS )
 			get_buffer_idx = 0;
+		return buffer;
 	}
-	return buffer;
+	buffer_mutex.unlock();
+	return NULL;
 }
 void FFMpegDec::releaseBuffer()
 {
@@ -106,7 +112,7 @@ void FFMpegDec::releaseBuffer()
 void FFMpegDec::run()
 {
 	int buffer_idx = 0;
-	if ( ffmpegIn.highPriority )
+	if ( block.highPriority )
 	{
 #ifdef Q_OS_LINUX
 		sched_param param = { 1 };
@@ -124,6 +130,7 @@ void FFMpegDec::run()
 		while ( !br && ( e = av_read_frame( fmtCtx, &pkt ) ) >= 0 )
 		{
 			int outBufferSize = 0;
+			stopped = false;
 			if ( pkt.stream_index == aStream->index )
 			{
 				AVPacket pkt_tmp = pkt;
@@ -133,13 +140,13 @@ void FFMpegDec::run()
 					if ( aCodec->channels == channels )
 					{
 						const int out_size = ceil( frame->nb_samples * ( float )Block::getSampleRate() / ( float )aCodec->sample_rate );
-						int buffer_size = outBufferSize + out_size * ffmpegIn.outputsCount();
+						int buffer_size = outBufferSize + out_size * block.outputsCount();
 
 						if ( outBuffer[ buffer_idx ].size() < buffer_size )
 							outBuffer[ buffer_idx ].resize( buffer_size );
 						quint8 *out[] = { ( quint8 * )( outBuffer[ buffer_idx ].data() + outBufferSize ) };
 						if ( ( buffer_size = swr_convert( swr, out, out_size, ( const quint8 ** )frame->extended_data, frame->nb_samples ) ) > 0 )
-							outBufferSize += buffer_size * ffmpegIn.outputsCount();
+							outBufferSize += buffer_size * block.outputsCount();
 					}
 					if ( duration > 0 )
 					{
@@ -147,7 +154,7 @@ void FFMpegDec::run()
 						if ( currentTime - lastTime >= 1.0 )
 						{
 							lastTime = ( int )currentTime;
-							emit dynamic_cast< FFMpegInUI * >( ffmpegIn.settings->getAdditionalSettings() )->setTime( lastTime );
+							emit dynamic_cast< FFMpegInUI * >( block.settings->getAdditionalSettings() )->setTime( lastTime );
 						}
 					}
 					pkt_tmp.data += bread;
@@ -161,29 +168,45 @@ void FFMpegDec::run()
 				if ( ++buffer_idx >= NUM_BUFFERS )
 					buffer_idx = 0;
 				buffer_mutex.lock();
-				if ( !br && ++buffers_available == NUM_BUFFERS )
-					buffer_cond.wait( &buffer_mutex );
+				if ( !br )
+				{
+					++buffers_available;
+					get_buffer_cond.wakeOne();
+					if ( buffers_available == NUM_BUFFERS )
+						buffer_cond.wait( &buffer_mutex );
+				}
 				buffer_mutex.unlock();
 			}
 			if ( seekTo > -1 )
-			{
-				if ( !av_seek_frame( fmtCtx, -1, ( int64_t )seekTo * AV_TIME_BASE, seekTo < lastTime ? AVSEEK_FLAG_BACKWARD : 0 ) )
-				{
-					avcodec_flush_buffers( aCodec );
-					lastTime = seekTo;
-				}
-				seekTo = -1;
-			}
+				break;
 		}
-		if ( !br && e == AVERROR_EOF )
+		if ( seekTo > -1 )
 		{
-			if ( ffmpegIn.loop && !av_seek_frame( fmtCtx, -1, 0, AVSEEK_FLAG_BACKWARD ) )
+			if ( !br && !av_seek_frame( fmtCtx, -1, ( int64_t )seekTo * AV_TIME_BASE, seekTo < lastTime ? AVSEEK_FLAG_BACKWARD : 0 ) )
+			{
+				avcodec_flush_buffers( aCodec );
+				lastTime = seekTo;
+			}
+			seekTo = -1;
+		}
+		else if ( !br && e == AVERROR_EOF )
+		{
+			if ( block.loop && !av_seek_frame( fmtCtx, -1, 0, AVSEEK_FLAG_BACKWARD ) )
 			{
 				avcodec_flush_buffers( aCodec );
 				lastTime = 0;
 			}
 			else
+			{
+				if ( !stopped )
+				{
+					buffer_mutex.lock();
+					stopped = true;
+					get_buffer_cond.wakeOne();
+					buffer_mutex.unlock();
+				}
 				msleep( 100 );
+			}
 		}
 	}
 }
@@ -193,8 +216,7 @@ void FFMpegDec::run()
 FFMpegIn::FFMpegIn() :
 	Block( "FFMpeg input", "Odtwarza pliki dźwiękowe", 0, 1, SOURCE ),
 	ffdec( *this ),
-	loop( false ),
-	highPriority( false )
+	loop( false ), highPriority( false ), nonblocking( true )
 {}
 
 bool FFMpegIn::start()
@@ -248,11 +270,11 @@ Block *FFMpegIn::createInstance()
 
 void FFMpegIn::serialize( QDataStream &ds ) const
 {
-	ds << file << loop << highPriority;
+	ds << file << loop << highPriority << nonblocking;
 }
 void FFMpegIn::deSerialize( QDataStream &ds )
 {
-	ds >> file >> loop >> highPriority;
+	ds >> file >> loop >> highPriority >> nonblocking;
 }
 
 #include <QPushButton>
@@ -278,8 +300,8 @@ FFMpegInUI::FFMpegInUI( FFMpegIn &block ) :
 	browseB->setText( "..." );
 
 	loopCB = new QCheckBox( "Zapętl odtwarzanie" );
-
 	priorityCB = new QCheckBox( "Wysoki priorytet" );
+	nonblockingCB = new QCheckBox( "Tryb nieblokujący" );
 
 	QGridLayout *layout = new QGridLayout( this );
 	layout->addWidget( fileE, 0, 0, 1, 1 );
@@ -287,6 +309,7 @@ FFMpegInUI::FFMpegInUI( FFMpegIn &block ) :
 	layout->addWidget( seekS, 1, 0, 1, 2 );
 	layout->addWidget( loopCB, 2, 0, 1, 2 );
 	layout->addWidget( priorityCB, 3, 0, 1, 2 );
+	layout->addWidget( nonblockingCB, 4, 0, 1, 2 );
 	layout->setMargin( 3 );
 
 	connect( fileE, SIGNAL( editingFinished() ), this, SLOT( setNewFile() ) );
@@ -294,6 +317,7 @@ FFMpegInUI::FFMpegInUI( FFMpegIn &block ) :
 	connect( seekS, SIGNAL( sliderMoved( int ) ), this, SLOT( seek( int ) ) );
 	connect( loopCB, SIGNAL( clicked( bool ) ), this, SLOT( setLoop( bool ) ) );
 	connect( priorityCB, SIGNAL( clicked( bool ) ), this, SLOT( setHighPriority( bool ) ) );
+	connect( nonblockingCB, SIGNAL( clicked( bool ) ), this, SLOT( setNonblocking( bool ) ) );
 	connect( this, SIGNAL( setTime( int ) ), this, SLOT( setTimeSlot( int ) ) );
 }
 
@@ -302,6 +326,7 @@ void FFMpegInUI::prepare()
 	fileE->setText( block.file );
 	loopCB->setChecked( block.loop );
 	priorityCB->setChecked( block.highPriority );
+	nonblockingCB->setChecked( block.nonblocking );
 }
 void FFMpegInUI::setRunMode( bool b )
 {
@@ -342,6 +367,10 @@ void FFMpegInUI::setLoop( bool loop )
 void FFMpegInUI::setHighPriority( bool highPriority )
 {
 	block.highPriority = highPriority;
+}
+void FFMpegInUI::setNonblocking( bool nonblocking )
+{
+	block.nonblocking = nonblocking;
 }
 void FFMpegInUI::setNewFile()
 {

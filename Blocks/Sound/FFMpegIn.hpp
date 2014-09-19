@@ -20,7 +20,7 @@ class FFMpegIn;
 class FFMpegDec : public QThread
 {
 public:
-	FFMpegDec( FFMpegIn &ffmpegIn );
+	FFMpegDec( FFMpegIn &block );
 	~FFMpegDec();
 
 	bool start();
@@ -36,7 +36,7 @@ public:
 private:
 	void run();
 
-	FFMpegIn &ffmpegIn;
+	FFMpegIn &block;
 	volatile bool br;
 
 	AVFormatContext *fmtCtx;
@@ -48,9 +48,9 @@ private:
 	QVector< float > outBuffer[ NUM_BUFFERS ];
 	int outBufferSamples[ NUM_BUFFERS ];
 	int channels, lastTime, duration, seekTo, get_buffer_idx, buffers_available;
-	bool canGetBuffer;
+	bool canGetBuffer, stopped;
 
-	QWaitCondition buffer_cond;
+	QWaitCondition buffer_cond, get_buffer_cond;
 	QMutex buffer_mutex;
 };
 
@@ -78,7 +78,7 @@ private:
 	QByteArray file;
 	QMutex mutex;
 
-	bool loop, highPriority;
+	bool loop, highPriority, nonblocking;
 };
 
 #include "Settings.hpp"
@@ -104,13 +104,14 @@ private slots:
 	void browseFile();
 	void setLoop( bool loop );
 	void setHighPriority( bool highPriority );
+	void setNonblocking( bool nonblocking );
 	void setNewFile();
 private:
 	FFMpegIn &block;
 	bool isRunning;
 
 	QLineEdit *fileE;
-	QCheckBox *loopCB, *priorityCB;
+	QCheckBox *loopCB, *priorityCB, *nonblockingCB;
 	QSlider *seekS;
 };
 
