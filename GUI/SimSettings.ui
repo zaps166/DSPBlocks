@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>304</width>
-    <height>109</height>
+    <width>320</width>
+    <height>120</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,7 +29,17 @@
    <property name="spacing">
     <number>3</number>
    </property>
-   <item row="3" column="0">
+   <item row="7" column="1">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="2">
     <widget class="QSpinBox" name="refTimeB">
      <property name="specialValueText">
       <string>Tryb nieblokujący (jeżeli możliwy)</string>
@@ -42,7 +52,23 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="0">
+   <item row="1" column="0" colspan="2">
+    <widget class="QSpinBox" name="srateB">
+     <property name="suffix">
+      <string> Hz</string>
+     </property>
+     <property name="prefix">
+      <string>Częstotliwość próbkowania: </string>
+     </property>
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>1000000000</number>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="2">
     <widget class="QDoubleSpinBox" name="simTimeB">
      <property name="specialValueText">
       <string>Czas symulacji bez ograniczeń</string>
@@ -64,23 +90,7 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QSpinBox" name="srateB">
-     <property name="suffix">
-      <string> Hz</string>
-     </property>
-     <property name="prefix">
-      <string>Częstotliwość próbkowania: </string>
-     </property>
-     <property name="minimum">
-      <number>1</number>
-     </property>
-     <property name="maximum">
-      <number>1000000000</number>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
+   <item row="4" column="0" colspan="2">
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -93,23 +103,12 @@
      </property>
     </spacer>
    </item>
-   <item row="4" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
  <tabstops>
   <tabstop>simTimeB</tabstop>
   <tabstop>srateB</tabstop>
   <tabstop>refTimeB</tabstop>
-  <tabstop>buttonBox</tabstop>
  </tabstops>
  <resources/>
  <connections>

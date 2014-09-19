@@ -11,13 +11,5 @@ MOC_DIR = build/moc
 INCLUDEPATH += ../../Lib
 DEPENDPATH  += ../../Lib
 
-HEADERS +=
-SOURCES += main.cpp
-
-linux*: {
-}
-
-win32: {
-	QMAKE_LIBDIR += ../../App
-	LIBS += -lMusicBlocks -lwinmm -luuid
-}
+HEADERS +=          AtLPT.hpp AtLPT_Out.hpp AtLPT_In.hpp
+SOURCES += main.cpp AtLPT.cpp AtLPT_Out.cpp AtLPT_In.cpp

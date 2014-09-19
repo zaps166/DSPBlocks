@@ -10,50 +10,136 @@ extern "C"
 	#include <libavutil/opt.h>
 }
 
-FFMpegIn::FFMpegIn() :
-	Block( "FFMpeg input", "Odtwarza pliki dźwiękowe", 0, 1, SOURCE ),
+#ifdef Q_OS_LINUX
+	#include <pthread.h>
+	#include <sched.h>
+#endif
+
+FFMpegDec::FFMpegDec( FFMpegIn &ffmpegIn ) :
+	ffmpegIn( ffmpegIn ),
 	fmtCtx( NULL ), aStream( NULL ), aCodec( NULL ), swr( NULL ),
 	frame( ( AVFrame * )av_mallocz( sizeof *frame ) ),
-	srate( 0 ),
-	loop( false )
+	canGetBuffer( false )
 {}
-FFMpegIn::~FFMpegIn()
+FFMpegDec::~FFMpegDec()
 {
 	av_free( frame );
 }
 
-bool FFMpegIn::start()
+bool FFMpegDec::start()
 {
-	srate = getSampleRate();
-	settings->setRunMode( true );
-	return ffmpegStart();
+	lastTime = get_buffer_idx = buffers_available = 0;
+	canGetBuffer = true;
+	seekTo = -1;
+	br = false;
+	if ( avformat_open_input( &fmtCtx, ffmpegIn.file, NULL, NULL ) == 0 && avformat_find_stream_info( fmtCtx, NULL ) >= 0 )
+	{
+		for ( unsigned i = 0 ; i < fmtCtx->nb_streams ; ++i )
+			if ( fmtCtx->streams[ i ]->codec->codec_type == AVMEDIA_TYPE_AUDIO )
+			{
+				aStream = fmtCtx->streams[ i ];
+				break;
+			}
+		if ( aStream && !avcodec_open2( aStream->codec, avcodec_find_decoder( aStream->codec->codec_id ), NULL ) )
+		{
+			aCodec = aStream->codec;
+			channels = aCodec->channels;
+			swr = swr_alloc_set_opts( NULL, av_get_default_channel_layout( ffmpegIn.outputsCount() ), AV_SAMPLE_FMT_FLT, Block::getSampleRate(), av_get_default_channel_layout( channels ), aCodec->sample_fmt, aCodec->sample_rate, 0, NULL );
+			av_opt_set_int( swr, "linear_interp", true, 0 );
+			if ( !swr_init( swr ) )
+			{
+				dynamic_cast< FFMpegInUI * >( ffmpegIn.settings->getAdditionalSettings() )->setMaxTime( ( duration = fmtCtx->duration / AV_TIME_BASE ) );
+				QThread::start();
+				return true;
+			}
+		}
+	}
+	return false;
 }
-void FFMpegIn::exec( Array< Sample > &samples )
+void FFMpegDec::stop()
 {
-	mutex.lock();
-	if ( fmtCtx && !outBufferSize )
+	ffmpegIn.mutex.lock();
+	canGetBuffer = false;
+	ffmpegIn.outBuffer = NULL;
+	ffmpegIn.mutex.unlock();
+	if ( isRunning() )
+	{
+		br = true;
+		if ( fmtCtx && fmtCtx->pb )
+			fmtCtx->pb->eof_reached = true;
+		buffer_cond.wakeOne();
+		wait();
+	}
+	aStream = NULL;
+	aCodec = NULL;
+	swr_free( &swr );
+	avformat_close_input( &fmtCtx );
+	for ( int i = 0 ; i < NUM_BUFFERS ; ++i )
+		outBuffer[ i ].clear();
+}
+
+const float *FFMpegDec::getBuffer()
+{
+	const float *buffer = NULL;
+	buffer_mutex.lock();
+	if ( !buffers_available || !canGetBuffer )
+		buffer_mutex.unlock();
+	else
+	{
+		buffer_mutex.unlock();
+		ffmpegIn.outBufferSize = outBufferSamples[ get_buffer_idx ];
+		buffer = outBuffer[ get_buffer_idx ].data();
+		ffmpegIn.outBufferPos = 0;
+		if ( ++get_buffer_idx == NUM_BUFFERS )
+			get_buffer_idx = 0;
+	}
+	return buffer;
+}
+void FFMpegDec::releaseBuffer()
+{
+	buffer_mutex.lock();
+	--buffers_available;
+	buffer_cond.wakeOne();
+	buffer_mutex.unlock();
+}
+
+void FFMpegDec::run()
+{
+	int buffer_idx = 0;
+	if ( ffmpegIn.highPriority )
+	{
+#ifdef Q_OS_LINUX
+		sched_param param = { 1 };
+		if ( pthread_setschedparam( pthread_self(), SCHED_RR, &param ) )
+			perror( "Nie można ustawić SCHED_RR dla wątku FFMPEG" );
+		else
+#endif
+			setPriority( HighestPriority );
+	}
+	while ( !br )
 	{
 		AVPacket pkt;
 		pkt.data = NULL;
-		int e;
-		while ( ( e = av_read_frame( fmtCtx, &pkt ) ) >= 0 )
+		int e = 0;
+		while ( !br && ( e = av_read_frame( fmtCtx, &pkt ) ) >= 0 )
 		{
+			int outBufferSize = 0;
 			if ( pkt.stream_index == aStream->index )
 			{
 				AVPacket pkt_tmp = pkt;
 				int ok = 0, bread;
-				outBufferSize = 0;
 				while ( ( bread = avcodec_decode_audio4( aCodec, frame, &ok, &pkt_tmp ) ) >= 0 && ok )
 				{
 					if ( aCodec->channels == channels )
 					{
-						const int out_size = ceil( frame->nb_samples * ( float )srate / ( float )aCodec->sample_rate );
-						int buffer_size = outBufferSize + out_size * outputsCount();
-						if ( outBuffer.size() < buffer_size )
-							outBuffer.resize( buffer_size );
-						quint8 *out[] = { ( quint8 * )( outBuffer.data() + outBufferSize ) };
+						const int out_size = ceil( frame->nb_samples * ( float )Block::getSampleRate() / ( float )aCodec->sample_rate );
+						int buffer_size = outBufferSize + out_size * ffmpegIn.outputsCount();
+
+						if ( outBuffer[ buffer_idx ].size() < buffer_size )
+							outBuffer[ buffer_idx ].resize( buffer_size );
+						quint8 *out[] = { ( quint8 * )( outBuffer[ buffer_idx ].data() + outBufferSize ) };
 						if ( ( buffer_size = swr_convert( swr, out, out_size, ( const quint8 ** )frame->extended_data, frame->nb_samples ) ) > 0 )
-							outBufferSize += buffer_size * outputsCount();
+							outBufferSize += buffer_size * ffmpegIn.outputsCount();
 					}
 					if ( duration > 0 )
 					{
@@ -61,30 +147,85 @@ void FFMpegIn::exec( Array< Sample > &samples )
 						if ( currentTime - lastTime >= 1.0 )
 						{
 							lastTime = ( int )currentTime;
-							emit dynamic_cast< FFMpegInUI * >( settings->getAdditionalSettings() )->setTime( lastTime );
+							emit dynamic_cast< FFMpegInUI * >( ffmpegIn.settings->getAdditionalSettings() )->setTime( lastTime );
 						}
 					}
 					pkt_tmp.data += bread;
 					pkt_tmp.size -= bread;
 				}
-				outBufferPos = 0;
 			}
 			av_free_packet( &pkt );
 			if ( outBufferSize )
-				break;
+			{
+				outBufferSamples[ buffer_idx ] = outBufferSize;
+				if ( ++buffer_idx >= NUM_BUFFERS )
+					buffer_idx = 0;
+				buffer_mutex.lock();
+				if ( !br && ++buffers_available == NUM_BUFFERS )
+					buffer_cond.wait( &buffer_mutex );
+				buffer_mutex.unlock();
+			}
+			if ( seekTo > -1 )
+			{
+				if ( !av_seek_frame( fmtCtx, -1, ( int64_t )seekTo * AV_TIME_BASE, seekTo < lastTime ? AVSEEK_FLAG_BACKWARD : 0 ) )
+				{
+					avcodec_flush_buffers( aCodec );
+					lastTime = seekTo;
+				}
+				seekTo = -1;
+			}
 		}
-		if ( e == AVERROR_EOF && loop && !av_seek_frame( fmtCtx, -1, 0, AVSEEK_FLAG_BACKWARD ) )
+		if ( !br && e == AVERROR_EOF )
 		{
-			avcodec_flush_buffers( aCodec );
-			lastTime = 0;
+			if ( ffmpegIn.loop && !av_seek_frame( fmtCtx, -1, 0, AVSEEK_FLAG_BACKWARD ) )
+			{
+				avcodec_flush_buffers( aCodec );
+				lastTime = 0;
+			}
+			else
+				msleep( 100 );
 		}
 	}
-	if ( outBufferSize )
+}
+
+/**/
+
+FFMpegIn::FFMpegIn() :
+	Block( "FFMpeg input", "Odtwarza pliki dźwiękowe", 0, 1, SOURCE ),
+	ffdec( *this ),
+	loop( false )
+{}
+
+bool FFMpegIn::start()
+{
+	outBuffer = NULL;
+	settings->setRunMode( true );
+	if ( !ffdec.start() )
+	{
+		if ( file.isEmpty() )
+			err = "Podaj ścieżkę do pliku!";
+		else if ( !QFile::exists( file ) )
+			err = "Podany plik nie istnieje!";
+		else
+			err = "Sprawdź poprawność pliku!";
+		return false;
+	}
+	return true;
+}
+void FFMpegIn::exec( Array< Sample > &samples )
+{
+	mutex.lock();
+	if ( !outBuffer )
+		outBuffer = ffdec.getBuffer();
+	if ( outBuffer )
 	{
 		for ( int i = 0 ; i < outputsCount() ; ++i )
-			samples += ( Sample ){ getTarget( i ), outBuffer[ outBufferPos + i ] };
-		outBufferPos += outputsCount();
-		outBufferSize -= outputsCount();
+			samples += ( Sample ){ getTarget( i ), outBuffer[ outBufferPos++ ] };
+		if ( !( outBufferSize -= outputsCount() ) )
+		{
+			ffdec.releaseBuffer();
+			outBuffer = NULL;
+		}
 	}
 	else for ( int i = 0 ; i < outputsCount() ; ++i )
 		samples += ( Sample ){ getTarget( i ), 0.0f };
@@ -93,9 +234,7 @@ void FFMpegIn::exec( Array< Sample > &samples )
 void FFMpegIn::stop()
 {
 	settings->setRunMode( false );
-	if ( fmtCtx )
-		ffmpegStop();
-	srate = 0;
+	ffdec.stop();
 }
 
 Block *FFMpegIn::createInstance()
@@ -108,63 +247,15 @@ Block *FFMpegIn::createInstance()
 
 void FFMpegIn::serialize( QDataStream &ds ) const
 {
-	ds << file << loop;
+	ds << file << loop << highPriority;
 }
 void FFMpegIn::deSerialize( QDataStream &ds )
 {
-	ds >> file >> loop;
-}
-
-bool FFMpegIn::ffmpegStart()
-{
-	if ( avformat_open_input( &fmtCtx, file, NULL, NULL ) == 0 && avformat_find_stream_info( fmtCtx, NULL ) >= 0 )
-	{
-		for ( unsigned i = 0 ; i < fmtCtx->nb_streams ; ++i )
-			if ( fmtCtx->streams[ i ]->codec->codec_type == AVMEDIA_TYPE_AUDIO )
-			{
-				aStream = fmtCtx->streams[ i ];
-				break;
-			}
-		if ( aStream && !avcodec_open2( aStream->codec, avcodec_find_decoder( aStream->codec->codec_id ), NULL ) )
-		{
-			aCodec = aStream->codec;
-			channels = aCodec->channels;
-			swr = swr_alloc_set_opts( NULL, av_get_default_channel_layout( outputsCount() ), AV_SAMPLE_FMT_FLT, srate, av_get_default_channel_layout( channels ), aCodec->sample_fmt, aCodec->sample_rate, 0, NULL );
-			av_opt_set_int( swr, "linear_interp", true, 0 );
-			if ( !swr_init( swr ) )
-			{
-				dynamic_cast< FFMpegInUI * >( settings->getAdditionalSettings() )->setMaxTime( ( duration = fmtCtx->duration / AV_TIME_BASE ) );
-				outBufferSize = outBufferPos = lastTime = 0;
-				mutex.unlock();
-				return true;
-			}
-		}
-	}
-	return false;
-}
-void FFMpegIn::ffmpegStop()
-{
-	aStream = NULL;
-	aCodec = NULL;
-	swr_free( &swr );
-	avformat_close_input( &fmtCtx );
-	outBuffer.clear();
-}
-
-void FFMpegIn::seek( int t )
-{
-	mutex.lock();
-	if ( !av_seek_frame( fmtCtx, -1, ( int64_t )t * AV_TIME_BASE, t < lastTime ? AVSEEK_FLAG_BACKWARD : 0 ) )
-	{
-		avcodec_flush_buffers( aCodec );
-		lastTime = t;
-	}
-	mutex.unlock();
+	ds >> file >> loop >> highPriority;
 }
 
 #include <QPushButton>
 #include <QToolButton>
-#include <QFileDialog>
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QSlider>
@@ -172,7 +263,8 @@ void FFMpegIn::seek( int t )
 
 FFMpegInUI::FFMpegInUI( FFMpegIn &block ) :
 	AdditionalSettings( block ),
-	block( block )
+	block( block ),
+	isRunning( false )
 {
 	seekS = new QSlider( Qt::Horizontal );
 	seekS->setDisabled( true );
@@ -184,21 +276,23 @@ FFMpegInUI::FFMpegInUI( FFMpegIn &block ) :
 	browseB->setToolTip( "Przeglądaj" );
 	browseB->setText( "..." );
 
-	loopCB = new QCheckBox( "Zapętl" );
+	loopCB = new QCheckBox( "Zapętl odtwarzanie" );
 
-	QPushButton *applyB = new QPushButton( "&Zastosuj" );
+	priorityCB = new QCheckBox( "Wysoki priorytet" );
 
 	QGridLayout *layout = new QGridLayout( this );
 	layout->addWidget( fileE, 0, 0, 1, 1 );
 	layout->addWidget( browseB, 0, 1, 1, 1 );
-	layout->addWidget( loopCB, 1, 0, 1, 2 );
-	layout->addWidget( applyB, 2, 0, 1, 2 );
-	layout->addWidget( seekS, 3, 0, 1, 2 );
+	layout->addWidget( seekS, 1, 0, 1, 2 );
+	layout->addWidget( loopCB, 2, 0, 1, 2 );
+	layout->addWidget( priorityCB, 3, 0, 1, 2 );
 	layout->setMargin( 3 );
 
+	connect( fileE, SIGNAL( editingFinished() ), this, SLOT( setNewFile() ) );
 	connect( browseB, SIGNAL( clicked() ), this, SLOT( browseFile() ) );
-	connect( applyB, SIGNAL( clicked() ), this, SLOT( apply() ) );
 	connect( seekS, SIGNAL( sliderMoved( int ) ), this, SLOT( seek( int ) ) );
+	connect( loopCB, SIGNAL( clicked( bool ) ), this, SLOT( setLoop( bool ) ) );
+	connect( priorityCB, SIGNAL( clicked( bool ) ), this, SLOT( setHighPriority( bool ) ) );
 	connect( this, SIGNAL( setTime( int ) ), this, SLOT( setTimeSlot( int ) ) );
 }
 
@@ -211,6 +305,8 @@ void FFMpegInUI::setRunMode( bool b )
 {
 	if ( !b )
 		setMaxTime( 0 );
+	priorityCB->setDisabled( b );
+	isRunning = b;
 }
 
 void FFMpegInUI::setMaxTime( int maxT )
@@ -226,33 +322,40 @@ void FFMpegInUI::setTimeSlot( int t )
 }
 void FFMpegInUI::seek( int t )
 {
-	if ( block.srate )
-		block.seek( t );
+	block.ffdec.seek( t );
 }
 void FFMpegInUI::browseFile()
 {
-	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik dźwiękowy", fileE->text() );
+	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik dźwiękowy", fileE->text(), QString(), NULL, Block::getNativeFileDialogFlag() );
 	if ( !newFile.isEmpty() )
+	{
 		fileE->setText( newFile );
+		setNewFile();
+	}
 }
-void FFMpegInUI::apply()
+void FFMpegInUI::setLoop( bool loop )
+{
+	block.loop = loop;
+}
+void FFMpegInUI::setHighPriority( bool highPriority )
+{
+	block.highPriority = highPriority;
+}
+void FFMpegInUI::setNewFile()
 {
 	const QByteArray newFile = fileE->text().toUtf8();
 	if ( block.file != newFile )
 	{
-		block.mutex.lock();
 		block.file = newFile;
-		if ( block.srate )
+		if ( isRunning )
 		{
-			block.ffmpegStop();
-			if ( !block.ffmpegStart() )
+			block.ffdec.stop();
+			if ( !block.ffdec.start() )
 			{
-				block.ffmpegStop();
+				block.ffdec.stop();
 				setMaxTime( 0 );
 			}
 			seekS->setValue( 0 );
 		}
-		block.mutex.unlock();
 	}
-	block.loop = loopCB->isChecked();
 }

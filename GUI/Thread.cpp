@@ -3,8 +3,24 @@
 #include "Array.hpp"
 #include "Functions.hpp"
 
+#define SECOND (1000000000LL)
+
 #ifdef Q_OS_WIN
 	#include <mmsystem.h>
+#endif
+#ifdef Q_OS_LINUX
+	#include <sys/time.h>
+//	#include <sys/mman.h>
+	#include <pthread.h>
+	#include <sched.h>
+
+	#ifdef USE_RTAI
+		#include <rtai_lxrt.h>
+	#endif
+
+	bool Thread::realTime = false;
+	Thread::RT_MODE Thread::rt_mode = Thread::CLOCK_NANOSLEEP;
+	int Thread::cpu = 0, Thread::sched = SCHED_FIFO, Thread::priority = DEFAULT_PRIORITY;
 #endif
 
 #include <QDebug>
@@ -18,6 +34,10 @@ void Thread::start( const QVector< Block * > &sources, quint64 simSamples, bool 
 
 #ifdef Q_OS_WIN
 	timeBeginPeriod( 1 );
+#endif
+
+#ifdef Q_OS_LINUX
+	realSampleRate = -1;
 #endif
 
 	QThread::start();
@@ -39,14 +59,90 @@ void Thread::run()
 	Array< Block::Sample > samples;
 	Array< Block * > blocks/*, crossBlocksStart, crossBlocksStart2*/;
 
-	quint32 counter = 0, counter_ov = 0;
-	double t1 = 0.0, period = Block::getPeriod( 0.0 );
-	isBlocking |= period == 0.0;
-	if ( !isBlocking )
+	quint32 counter = 0, counter_ov = 0, period;
+	qint64 t1 = 0;
+#ifdef Q_OS_LINUX
+	qint64 realSrateT = 0;
+	timespec rt_time;
+	#ifdef USE_RTAI
+		RT_TASK *rtai_task;
+		RTIME rtai_period;
+	#endif
+	bool rt = isBlocking ? false : Thread::isRealTime();
+
+	if ( !rt )
 	{
-		counter_ov = Block::getBufferSize();
-		t1 = Functions::gettime();
+#endif
+		period = Block::getPeriod( 0.0 ) * SECOND;
+		isBlocking |= period == 0;
+		if ( !isBlocking )
+		{
+			counter_ov = Block::getBufferSize();
+			t1 = Functions::gettime();
+		}
+#ifdef Q_OS_LINUX
 	}
+	else
+	{
+		QString errStr;
+#ifdef USE_RTAI
+		if ( rt_mode != RTAI )
+		{
+#endif
+			sched_param param = { Thread::getPriority() };
+			if ( pthread_setschedparam( pthread_self(), Thread::getSched(), &param ) )
+				errStr = "Nie można ustawić schedulera.";
+			if ( Thread::getCPU() )
+			{
+				cpu_set_t set;
+				CPU_ZERO( &set );
+				CPU_SET( Thread::getCPU() - 1, &set );
+				if ( pthread_setaffinity_np( pthread_self(), sizeof set, &set ) )
+				{
+					if ( !errStr.isEmpty() )
+						errStr += '\n';
+					errStr += "Nie można ustawić CPU affinity.";
+				}
+			}
+	//		if ( mlockall( MCL_CURRENT | MCL_FUTURE ) )
+	//			perror( "mlockall" );
+			if ( !errStr.isEmpty() )
+			{
+				errStr += "\nSprawdź uprawnienia!";
+				emit errorMessage( errStr );
+			}
+#ifdef USE_RTAI
+		}
+#endif
+		period = SECOND / Block::getSampleRate();
+		counter_ov = Block::getSampleRate();
+		realSrateT = Functions::gettime();
+		switch ( rt_mode )
+		{
+			case NANOSLEEP:
+				t1 = realSrateT;
+				break;
+#ifdef USE_RTAI
+			case RTAI:
+			{
+				int cpu_allowed = Thread::getCPU() ? ( 1 << ( Thread::getCPU() - 1 ) ) : 0;
+				rtai_task = rt_task_init_schmod( nam2num( "MUSICBLOCKS" ), Thread::getPriority(), 0, 1, Thread::getSched(), cpu_allowed );
+				if ( rt_is_hard_timer_running() )
+					stop_rt_timer();
+				rt_set_oneshot_mode();
+				rtai_period = nano2count( period );
+				start_rt_timer( 0 );
+				rt_task_make_periodic( rtai_task, rt_get_time() + rtai_period, rtai_period );
+				rt_make_hard_real_time();
+			} break;
+#endif
+			case CLOCK_NANOSLEEP:
+			default:
+				clock_gettime( CLOCK_MONOTONIC, &rt_time );
+				break;
+		}
+	}
+#endif
 
 	while ( !br )
 	{
@@ -115,12 +211,57 @@ void Thread::run()
 //		if ( blocks.notEmpty() )
 //			continue;
 
+//		usleep( 0 );
+
+#ifdef Q_OS_LINUX
+		if ( rt )
+		{
+			switch ( rt_mode )
+			{
+				case NANOSLEEP:
+				{
+					qint64 t2 = Functions::gettime();
+					long sleep_time = period - t2 + t1;
+					if ( sleep_time > 0 )
+					{
+						timespec ts = { 0, sleep_time };
+						nanosleep( &ts, NULL );
+					}
+					t1 = Functions::gettime();
+					t1 -= t1 - t2 - sleep_time;
+				} break;
+#ifdef USE_RTAI
+				case RTAI:
+					rt_task_wait_period();
+					break;
+#endif
+				case CLOCK_NANOSLEEP:
+				default:
+					clock_nanosleep( CLOCK_MONOTONIC, TIMER_ABSTIME, &rt_time, NULL );
+					rt_time.tv_nsec += period;
+					while ( rt_time.tv_nsec >= SECOND )
+					{
+						rt_time.tv_nsec -= SECOND;
+						++rt_time.tv_sec;
+					}
+					break;
+			}
+			if ( ++counter == counter_ov )
+			{
+				qint64 realSrateT2 = Functions::gettime();
+				realSampleRate = counter_ov * ( SECOND * 10LL ) / ( realSrateT2 - realSrateT );
+				realSrateT = realSrateT2;
+				counter = 0;
+			}
+		}
+		else
+#endif
 		if ( !isBlocking && ++counter == counter_ov )
 		{
-			double t2 = Functions::gettime();
-			double sleep_time = period - t2 + t1;
-			if ( sleep_time > 0.0 )
-				usleep( sleep_time * 1000000 );
+			qint64 t2 = Functions::gettime();
+			qint64 sleep_time = period - t2 + t1;
+			if ( sleep_time >= 1000 )
+				usleep( sleep_time / 1000 );
 			t1 = Functions::gettime();
 			t1 -= t1 - t2 - sleep_time;
 			counter = 0;
@@ -130,6 +271,15 @@ void Thread::run()
 //		putchar( 10 );
 //		fflush( stdout );
 	}
+
+#ifdef USE_RTAI
+	if ( rt_mode == RTAI )
+	{
+		rt_make_soft_real_time();
+		rt_task_delete( rtai_task );
+		stop_rt_timer();
+	}
+#endif
 
 	sources.clear();
 }

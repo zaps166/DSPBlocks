@@ -16,7 +16,7 @@ public:
 	QAction *createAction();
 private slots:
 	void on_textEditChooseB_clicked( bool b );
-	void on_srateB_valueChanged( int hz );
+	void on_srateB_editingFinished();
 	void on_textEditB_toggled( bool b );
 	void on_coeffGenB_clicked();
 	void on_liveUpdateB_clicked( bool b );

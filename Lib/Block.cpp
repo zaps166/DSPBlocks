@@ -13,6 +13,8 @@
 #include <math.h>
 
 static quint16 id;
+
+bool Block::nativeFileDialogFlag = true;
 int Block::sampleRate = DEFAULT_SAMPLERATE, Block::refTime = DEFAULT_REFTIME;
 
 enum { SETTINGS = 0, DISCONNECT_INPUTS = 2, DISCONNECT_OUTPUTS = 3, DELETE = 5 };

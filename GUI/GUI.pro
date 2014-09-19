@@ -24,6 +24,16 @@ SOURCES += main.cpp MainWindow.cpp Thread.cpp BlocksTree.cpp SchemeView.cpp SimS
 HEADERS +=          MainWindow.hpp Thread.hpp BlocksTree.hpp SchemeView.hpp SimSettings.hpp
 FORMS   +=          MainWindow.ui                                           SimSettings.ui
 
+linux*: {
+	SOURCES += RTSettings.cpp
+	HEADERS += RTSettings.hpp
+	FORMS   += RTSettings.ui
+
+#	DEFINES += USE_RTAI
+#	INCLUDEPATH += /usr/realtime/include
+#	LIBS += -L/usr/realtime/lib -llxrt
+}
+
 OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
 UI_DIR = build/rcc

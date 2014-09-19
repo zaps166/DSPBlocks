@@ -1,16 +1,17 @@
 #include "SimSettings.hpp"
+#include "Block.hpp"
 
-SimSettings::SimSettings( QWidget *parent, double simTime, int srate, int refTime ) :
+SimSettings::SimSettings( QWidget *parent, double simTime ) :
 	QDialog( parent )
 {
 	ui.setupUi( this );
 
 	ui.simTimeB->setValue( simTime );
-	ui.srateB->setValue( srate );
+	ui.srateB->setValue( Block::getSampleRate() );
 
 	checkSampleRate();
 
-	ui.refTimeB->setValue( refTime );
+	ui.refTimeB->setValue( Block::getRefTime() );
 
 	connect( ui.srateB, SIGNAL( editingFinished() ), this, SLOT( checkSampleRate() ) );
 }

@@ -68,7 +68,6 @@ void FileWriter::deSerialize( QDataStream &ds )
 	f.setFileName( fPth );
 }
 
-#include <QFileDialog>
 #include <QToolButton>
 #include <QPushButton>
 #include <QLineEdit>
@@ -137,7 +136,7 @@ void FileWriterUI::setFileName()
 }
 void FileWriterUI::browseFile()
 {
-	QString newFile = QFileDialog::getSaveFileName( this, "Wybierz plik zapisu", fileE->text() );
+	QString newFile = QFileDialog::getSaveFileName( this, "Wybierz plik zapisu", fileE->text(), QString(), NULL, Block::getNativeFileDialogFlag() );
 	if ( !newFile.isEmpty() )
 		fileE->setText( newFile );
 }

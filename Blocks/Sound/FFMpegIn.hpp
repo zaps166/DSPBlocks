@@ -9,14 +9,57 @@ struct AVCodecContext;
 struct SwrContext;
 struct AVFrame;
 
+class FFMpegIn;
+
+#include <QWaitCondition>
+#include <QThread>
 #include <QMutex>
+
+#define NUM_BUFFERS 3
+
+class FFMpegDec : public QThread
+{
+public:
+	FFMpegDec( FFMpegIn &ffmpegIn );
+	~FFMpegDec();
+
+	bool start();
+	void stop();
+
+	inline void seek( int t )
+	{
+		seekTo = t;
+	}
+
+	const float *getBuffer();
+	void releaseBuffer();
+private:
+	void run();
+
+	FFMpegIn &ffmpegIn;
+	volatile bool br;
+
+	AVFormatContext *fmtCtx;
+	AVStream *aStream;
+	AVCodecContext *aCodec;
+	SwrContext *swr;
+	AVFrame *frame;
+
+	QVector< float > outBuffer[ NUM_BUFFERS ];
+	int outBufferSamples[ NUM_BUFFERS ];
+	int channels, lastTime, duration, seekTo, get_buffer_idx, buffers_available;
+	bool canGetBuffer;
+
+	QWaitCondition buffer_cond;
+	QMutex buffer_mutex;
+};
 
 class FFMpegIn : public Block
 {
 	friend class FFMpegInUI;
+	friend class FFMpegDec;
 public:
 	FFMpegIn();
-	~FFMpegIn();
 
 	bool start();
 	void exec( Array< Sample > &samples );
@@ -27,25 +70,15 @@ private:
 	void serialize( QDataStream &ds ) const;
 	void deSerialize( QDataStream &ds );
 
-	bool ffmpegStart();
-	void ffmpegStop();
+	FFMpegDec ffdec;
 
-	void seek( int t );
+	int outBufferSize, outBufferPos;
+	const float *outBuffer;
 
 	QByteArray file;
 	QMutex mutex;
 
-	QVector< float > outBuffer;
-	int outBufferPos, outBufferSize;
-
-	AVFormatContext *fmtCtx;
-	AVStream *aStream;
-	AVCodecContext *aCodec;
-	SwrContext *swr;
-	AVFrame *frame;
-	int srate, channels;
-	int duration, lastTime;
-	bool loop;
+	bool loop, highPriority;
 };
 
 #include "Settings.hpp"
@@ -69,12 +102,15 @@ private slots:
 	void setTimeSlot( int t );
 	void seek( int t );
 	void browseFile();
-	void apply();
+	void setLoop( bool loop );
+	void setHighPriority( bool highPriority );
+	void setNewFile();
 private:
 	FFMpegIn &block;
+	bool isRunning;
 
 	QLineEdit *fileE;
-	QCheckBox *loopCB;
+	QCheckBox *loopCB, *priorityCB;
 	QSlider *seekS;
 };
 

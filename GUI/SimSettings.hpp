@@ -7,7 +7,7 @@ class SimSettings : public QDialog
 {
 	Q_OBJECT
 public:
-	SimSettings( QWidget *parent, double simTime, int srate, int refTime );
+	SimSettings( QWidget *parent, double simTime );
 
 	inline double getSimulationTime() const
 	{

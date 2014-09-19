@@ -17,6 +17,7 @@ FIR_Designer::FIR_Designer( QSettings &settings ) :
 	ui.windFuncW->setKaiserEditEnabled( false );
 
 	ui.srateB->setValue( Block::getSampleRate() );
+	on_srateB_editingFinished();
 	ui.cutoffB->setValue( ui.srateB->value() / 48 );
 	ui.cutF2B->setValue( ui.srateB->value() / 24 );
 	ui.cutF1B->setValue( ui.srateB->value() / 48 );
@@ -60,6 +61,14 @@ void FIR_Designer::on_textEditChooseB_clicked( bool b )
 		setCursor( Qt::CrossCursor );
 		grabMouse();
 	}
+}
+void FIR_Designer::on_srateB_editingFinished()
+{
+	ui.cutoffB->setMaximum( ui.srateB->value() / 2 );
+	ui.cutF2B->setMaximum( ui.srateB->value() / 2 );
+	if ( ui.transitionWidthB->isEnabled() )
+		calcKaiserBeta();
+	genCoeffsIfCan();
 }
 void FIR_Designer::on_textEditB_toggled( bool b )
 {
@@ -159,12 +168,12 @@ void FIR_Designer::on_numCoeffB_editingFinished()
 }
 void FIR_Designer::on_cutF1B_valueChanged( int hz )
 {
-	ui.cutF2B->setMinimum( hz );
+	ui.cutF2B->setMinimum( hz+1 );
 	genCoeffsIfCan();
 }
 void FIR_Designer::on_cutF2B_valueChanged( int hz )
 {
-	ui.cutF1B->setMaximum( hz );
+	ui.cutF1B->setMaximum( hz-1 );
 	if ( hz < ui.cutF2B->value() )
 		ui.cutF2B->setValue( ui.cutF1B->value() );
 	genCoeffsIfCan();
@@ -242,13 +251,4 @@ void FIR_Designer::setFirCoeffE( QPlainTextEdit *e )
 {
 	firCoeffE = e;
 	ui.textEditChoosedL->setText( firCoeffE ? "tak" : "nie" );
-}
-
-void FIR_Designer::on_srateB_valueChanged( int hz )
-{
-	ui.cutoffB->setMaximum( hz / 2 );
-	ui.cutF2B->setMaximum( hz / 2 );
-	if ( ui.transitionWidthB->isEnabled() )
-		calcKaiserBeta();
-	genCoeffsIfCan();
 }

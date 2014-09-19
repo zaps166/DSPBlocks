@@ -3,6 +3,7 @@
 
 #include <QCoreApplication>
 #include <QGraphicsItem>
+#include <QFileDialog>
 #include <QMenu>
 #include <QPen>
 
@@ -21,6 +22,7 @@ class Block : public QGraphicsItem
 	friend class Settings;
 	friend class Scene;
 
+	static bool nativeFileDialogFlag;
 	static int sampleRate, refTime;
 public:
 	enum Type { SOURCE, PROCESSING, SINK };
@@ -32,6 +34,19 @@ public:
 	};
 
 	static void setIDCounter( quint16 id );
+
+	static inline void setNativeFileDialog( bool n )
+	{
+		nativeFileDialogFlag = n;
+	}
+	static inline QFileDialog::Option getNativeFileDialogFlag()
+	{
+		return nativeFileDialogFlag ? ( QFileDialog::Option )0 : QFileDialog::DontUseNativeDialog;
+	}
+	static inline bool isNativeFileDialog()
+	{
+		return nativeFileDialogFlag;
+	}
 
 	static inline void setSampleRateAndRefTime( int srate, int refT )
 	{
@@ -105,6 +120,13 @@ public:
 	virtual void exec( Array< Sample > &samples ) { Q_UNUSED( samples ) }
 	virtual void stop() = 0;
 
+	inline QString getError()
+	{
+		QString tmp = err;
+		err.clear();
+		return tmp;
+	}
+
 	QPixmap createPixmap();
 
 	inline quint8 inputsCount() const
@@ -152,7 +174,7 @@ protected:
 	virtual void outputsCountChanged( int num ) { Q_UNUSED( num ) }
 
 	Settings *settings;
-	QString label;
+	QString label, err;
 	bool blocking;
 private:
 	void disconnectAll();

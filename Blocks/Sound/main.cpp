@@ -26,7 +26,7 @@ extern "C" QList< Block * > createBlocks()
 	}
 	return QList< Block * >() <<
 #ifdef USE_ALSA
-		new AlsaOut << new AlsaIn <<
+		new AlsaIn << new AlsaOut <<
 #endif
 		new Equalizer << new FFMpegIn << new Image << new PortAudioIn << new PortAudioOut << new Spectrum;
 }

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1066</width>
-    <height>600</height>
+    <width>1064</width>
+    <height>598</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -129,8 +129,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1066</width>
-     <height>19</height>
+     <width>1064</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_Plik">
@@ -172,10 +172,17 @@
      <string>&amp;Dodatki</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menu_Widok">
+    <property name="title">
+     <string>&amp;Widok</string>
+    </property>
+    <addaction name="action_U_yj_natywnych_okien_dialogowych"/>
+   </widget>
    <addaction name="menu_Plik"/>
    <addaction name="menu_Edycja"/>
    <addaction name="menu_Symulacja"/>
    <addaction name="menu_Dodatki"/>
+   <addaction name="menu_Widok"/>
    <addaction name="menu_Pomoc"/>
   </widget>
   <action name="actionStart">
@@ -264,6 +271,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+U</string>
+   </property>
+  </action>
+  <action name="action_U_yj_natywnych_okien_dialogowych">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Użyj natywnych okien dialogowych</string>
    </property>
   </action>
  </widget>

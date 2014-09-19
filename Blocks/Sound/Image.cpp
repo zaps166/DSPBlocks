@@ -7,7 +7,6 @@ extern "C"
 	#include <libavutil/mem.h>
 }
 
-#include <QFileDialog>
 #include <QDebug>
 
 Image::Image() :
@@ -248,7 +247,7 @@ void ImageUI::itemsVisible()
 
 void ImageUI::browseFile()
 {
-	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik obrazka", fileE->text() );
+	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik obrazka", fileE->text(), QString(), NULL, Block::getNativeFileDialogFlag() );
 	if ( !newFile.isEmpty() )
 		fileE->setText( newFile );
 }

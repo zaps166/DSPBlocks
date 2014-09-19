@@ -1,9 +1,14 @@
 #include "MainWindow.hpp"
 #include "SimSettings.hpp"
+#ifdef Q_OS_LINUX
+	#include "RTSettings.hpp"
+#endif
 #include "Block.hpp"
 
+#ifdef Q_OS_LINUX
+	#include <QStatusBar>
+#endif
 #include <QCloseEvent>
-#include <QFileDialog>
 #include <QMessageBox>
 #include <QSettings>
 #include <QLibrary>
@@ -35,6 +40,21 @@ MainWindow::MainWindow( QSettings &settings, QWidget *parent ) :
 {
 	setAttribute( Qt::WA_DeleteOnClose );
 	ui.setupUi( this );
+
+#ifdef Q_OS_LINUX
+	ui.toolBar->addAction( actionRT = ui.menu_Symulacja->addAction( QIcon::fromTheme( "clock" ), "&Tryb czasu rzeczywistego", this, SLOT( realTimeModeSettings() ), QKeySequence( "Alt+R" ) ) );
+
+	showRealSampleRateAction = ui.menu_Widok->addAction( "&Pokazuj rzeczywistą częstotliwość próbkowania w trybie czasu rzeczywistego", this, SLOT( showRealSampleRate() ) );
+	showRealSampleRateAction->setCheckable( true );
+	showRealSampleRateAction->setChecked( settings.value( "MainWindow/ShowRealSampleRate", true ).toBool() );
+
+	setStatusBar( new QStatusBar );
+	statusL = new QLabel;
+	statusBar()->addWidget( statusL );
+	statusBar()->hide();
+	connect( &statusTimRef, SIGNAL( timeout() ), this, SLOT( updateSRate() ) );
+	lastRealSampleRate = -1;
+#endif
 
 	qApp->setProperty( "MainWindow", QVariant::fromValue( ( void * )this ) );
 	qApp->setProperty( "share", qApp->applicationDirPath() + UNIX_CDUP"/share/MusicBlocks" );
@@ -126,6 +146,21 @@ MainWindow::MainWindow( QSettings &settings, QWidget *parent ) :
 	connect( &thread, SIGNAL( finished() ), this, SLOT( threadStopped() ) );
 	connect( &scene, SIGNAL( saveState() ), this, SLOT( saveState() ) );
 
+	if ( ui.action_U_yj_natywnych_okien_dialogowych->isChecked() != settings.value( "NativeFileDialog", Block::isNativeFileDialog() ).toBool() )
+		ui.action_U_yj_natywnych_okien_dialogowych->trigger();
+
+#ifdef Q_OS_LINUX
+	Thread::setRealTime
+	(
+		settings.value( "RealTime/Enabled", Thread::isRealTime() ).toBool(),
+		settings.value( "RealTime/CPU", Thread::getCPU() ).toInt(),
+		settings.value( "RealTime/Sched", Thread::getSched() ).toInt(),
+		settings.value( "RealTime/Priority", Thread::getPriority() ).toInt(),
+		settings.value( "RealTime/RtMode", Thread::getRtMode() ).toInt()
+	);
+	connect( &thread, SIGNAL( errorMessage( const QString & ) ), this, SLOT( errorMessage( const QString & ) ) );
+#endif
+
 	prepareUndoRedo();
 
 	ui.graphicsView->setFocus();
@@ -143,6 +178,16 @@ MainWindow::~MainWindow()
 	settings.setValue( "MainWindow/MainWinGeo", saveGeometry() );
 	settings.setValue( "MainWindow/SplitterState", ui.splitter->saveState() );
 
+#ifdef Q_OS_LINUX
+	settings.setValue( "MainWindow/ShowRealSampleRate", showRealSampleRateAction->isChecked() );
+
+	settings.setValue( "RealTime/Enabled", Thread::isRealTime() );
+	settings.setValue( "RealTime/Sched", Thread::getSched() );
+	settings.setValue( "RealTime/Priority", Thread::getPriority() );
+	settings.setValue( "RealTime/CPU", Thread::getCPU() );
+	settings.setValue( "RealTime/RtMode", Thread::getRtMode() );
+#endif
+
 	thread.stop();
 	threadStopped();
 
@@ -151,6 +196,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::threadStopped()
 {
+#ifdef Q_OS_LINUX
+	stopStatusUpdates();
+#endif
 	foreach ( QGraphicsItem *item, scene.items() )
 	{
 		Block *block = dynamic_cast< Block * >( item );
@@ -185,7 +233,7 @@ void MainWindow::on_actionOtw_rz_triggered()
 {
 	if ( askToSave() )
 	{
-		QString fName = QFileDialog::getOpenFileName( this, "Wybierz plik schematu", projectFile, "Schematy (*.mblcks)" );
+		QString fName = QFileDialog::getOpenFileName( this, "Wybierz plik schematu", projectFile, "Schematy (*.mblcks)", NULL, Block::getNativeFileDialogFlag() );
 		if ( !fName.isEmpty() )
 			loadFile( fName );
 	}
@@ -199,7 +247,7 @@ void MainWindow::on_actionZapisz_triggered()
 }
 void MainWindow::on_actionZapisz_jako_triggered()
 {
-	QString fName = QFileDialog::getSaveFileName( this, "Wybierz plik schematu", projectFile.isEmpty() ? QString() : QFileInfo( projectFile ).path(), "Schematy (*.mblcks)" );
+	QString fName = QFileDialog::getSaveFileName( this, "Wybierz plik schematu", projectFile.isEmpty() ? QString() : QFileInfo( projectFile ).path(), "Schematy (*.mblcks)", NULL, Block::getNativeFileDialogFlag() );
 	if ( !fName.isEmpty() )
 	{
 		projectFile = fName;
@@ -264,7 +312,10 @@ void MainWindow::on_actionStart_triggered( bool checked )
 					isBlocking |= block->isBlocking();
 				}
 				if ( err || !block->start() )
-					errorBlocks += block->getName() + '\n';
+				{
+					QString blockErr = block->getError();
+					errorBlocks += "<li><b>" + block->getName() + "</b>" + ( blockErr.isEmpty() ? QString() : " - " + blockErr ) + "</li>";
+				}
 			}
 		}
 		if ( sources.isEmpty() || !errorBlocks.isEmpty() )
@@ -272,25 +323,56 @@ void MainWindow::on_actionStart_triggered( bool checked )
 			threadStopped();
 			ui.actionStart->setChecked( false );
 			errorBlocks.chop( 1 );
-			QMessageBox::critical( this, "Błąd", errorBlocks.isEmpty() ? "Brak podłączonych źródeł" : "Poniższe bloczki zwróciły błąd:\n" + errorBlocks );
+			QMessageBox::critical( this, "Błąd", errorBlocks.isEmpty() ? "Brak podłączonych źródeł" : "Poniższe bloczki zwróciły błąd:<ul>" + errorBlocks + "</ul>" );
 		}
 		else if ( !sources.isEmpty() )
 		{
 			setItemsEnabled( false );
 			qApp->setProperty( "allBlocks", QVariant::fromValue( ( uintptr_t )&allBlocks ) );
+#ifdef Q_OS_LINUX
+			if ( Thread::isRealTime() )
+			{
+				if ( isBlocking )
+					QMessageBox::warning( this, "Tryb czasu rzeczywistego", "Używane są bloczki blokujące, tryb czasu rzeczywistego nie zostanie aktywowany." );
+				else
+					startStatusUpdates();
+			}
+#endif
 			thread.start( sources, ceil( simulationTime * Block::getSampleRate() ), isBlocking );
 		}
 	}
 }
 void MainWindow::on_action_Ustawienia_triggered()
 {
-	SimSettings simSettings( this, simulationTime, Block::getSampleRate(), Block::getRefTime() );
+	SimSettings simSettings( this, simulationTime );
 	if ( simSettings.exec() == QDialog::Accepted )
 	{
 		Block::setSampleRateAndRefTime( simSettings.getSampleRate(), simSettings.getRefTime() );
 		simulationTime = simSettings.getSimulationTime();
 		saveState();
 	}
+}
+void MainWindow::realTimeModeSettings()
+{
+#ifdef Q_OS_LINUX
+	RTSettings rtSettings( this );
+	rtSettings.exec();
+#endif
+}
+void MainWindow::on_action_U_yj_natywnych_okien_dialogowych_triggered( bool n )
+{
+	Block::setNativeFileDialog( n );
+	settings.setValue( "NativeFileDialog", n );
+}
+void MainWindow::showRealSampleRate()
+{
+#ifdef Q_OS_LINUX
+	if ( thread.isRunning() )
+	{
+		stopStatusUpdates();
+		startStatusUpdates();
+	}
+#endif
 }
 void MainWindow::on_action_O_programie_triggered()
 {
@@ -302,6 +384,25 @@ void MainWindow::on_blocksFilterE_textChanged( const QString &txt )
 	foreach ( QTreeWidgetItem *item, ui.blocksW->findItems( QString(), Qt::MatchContains | Qt::MatchRecursive ) )
 		if ( item->parent() )
 			item->setHidden( !item->text( 1 ).contains( txt, Qt::CaseInsensitive ) );
+}
+
+void MainWindow::errorMessage( const QString &msg )
+{
+#ifdef Q_OS_LINUX
+	QMessageBox::critical( this, "Tryb czasu rzeczywistego", msg );
+#endif
+}
+void MainWindow::updateSRate()
+{
+#ifdef Q_OS_LINUX
+	qint32 realSampleRate = thread.getRealSampleRate();
+	if ( realSampleRate != lastRealSampleRate )
+	{
+		if ( realSampleRate >= 0 )
+			statusL->setText( QString( "Próbkowanie: %1 Hz" ).arg( realSampleRate / 10.0 ) );
+		lastRealSampleRate = realSampleRate;
+	}
+#endif
 }
 
 void MainWindow::nowy()
@@ -363,6 +464,9 @@ void MainWindow::setItemsEnabled( bool e )
 		ui.actionPrzywr_c->setEnabled( false );
 	}
 	ui.action_Ustawienia->setEnabled( e );
+#ifdef Q_OS_LINUX
+	actionRT->setEnabled( e );
+#endif
 }
 
 void MainWindow::loadFile( const QString &fName )
@@ -450,4 +554,27 @@ bool MainWindow::restore( const QByteArray &save )
 	foreach ( Block *block, blocks )
 		block->repairConnections();
 	return true;
+}
+
+void MainWindow::startStatusUpdates()
+{
+#ifdef Q_OS_LINUX
+	if ( showRealSampleRateAction->isChecked() )
+	{
+		statusBar()->show();
+		statusTimRef.start( 750 );
+	}
+#endif
+}
+void MainWindow::stopStatusUpdates()
+{
+#ifdef Q_OS_LINUX
+	if ( statusTimRef.isActive() )
+	{
+		statusTimRef.stop();
+		statusBar()->hide();
+		lastRealSampleRate = 0;
+		statusL->clear();
+	}
+#endif
 }

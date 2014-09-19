@@ -74,7 +74,6 @@ void FileReader::deSerialize( QDataStream &ds )
 	f.setFileName( fPth );
 }
 
-#include <QFileDialog>
 #include <QToolButton>
 #include <QPushButton>
 #include <QLineEdit>
@@ -144,7 +143,7 @@ void FileReaderUI::setFileName()
 }
 void FileReaderUI::browseFile()
 {
-	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik do odczytu", fileE->text() );
+	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik do odczytu", fileE->text(), QString(), NULL, Block::getNativeFileDialogFlag() );
 	if ( !newFile.isEmpty() )
 		fileE->setText( newFile );
 }

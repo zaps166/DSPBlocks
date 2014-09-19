@@ -6,9 +6,13 @@
 #include "Scene.hpp"
 
 #include <QStack>
+#include <QTimer>
 
 class QSettings;
 class Scene;
+#ifdef Q_OS_LINUX
+	class QLabel;
+#endif
 
 class MainWindow : public QMainWindow
 {
@@ -29,9 +33,15 @@ private slots:
 	void on_actionPrzywr_c_triggered();
 	void on_actionStart_triggered( bool checked );
 	void on_action_Ustawienia_triggered();
+	void realTimeModeSettings();
+	void on_action_U_yj_natywnych_okien_dialogowych_triggered( bool n );
+	void showRealSampleRate();
 	void on_action_O_programie_triggered();
 
 	void on_blocksFilterE_textChanged( const QString &txt );
+
+	void errorMessage( const QString &msg );
+	void updateSRate();
 private:
 	void nowy();
 	bool askToSave();
@@ -49,7 +59,17 @@ private:
 	QByteArray save();
 	bool restore( const QByteArray &save );
 
+	void startStatusUpdates();
+	void stopStatusUpdates();
+
 	Ui::MainWindow ui;
+
+#ifdef Q_OS_LINUX
+	QAction *actionRT, *showRealSampleRateAction;
+	qint32 lastRealSampleRate;
+	QTimer statusTimRef;
+	QLabel *statusL;
+#endif
 
 	Scene scene;
 	Thread thread;

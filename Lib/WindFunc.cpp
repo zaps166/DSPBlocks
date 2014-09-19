@@ -80,6 +80,7 @@ static double modZeroBessel( double x )
 WindFunc::WindFunc( QWidget *parent ) :
 	QFrame( parent ),
 	kaiserEditEnabled( true ),
+	userWindFunc( "1.0" ),
 	kaiserBeta( 1.0 )
 {
 	setFrameShape( StyledPanel );
