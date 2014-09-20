@@ -39,9 +39,9 @@ void DrawThr::run()
 {
 	qint64 t1 = Functions::gettime();
 	qint32 period = Block::getPeriod() * 1000;
+	block.drawMutex.lock();
 	while ( !br )
 	{
-		block.drawMutex.lock();
 		if ( !br && !block.bufferReady )
 			block.drawCond.wait( &block.drawMutex );
 		if ( !br )
@@ -52,12 +52,10 @@ void DrawThr::run()
 				block.draw();
 				t1 = t2;
 			}
-			if ( !block.xy )
-				block.lastOutBuffer.swap( block.outBuffer );
 			block.bufferReady = false;
 		}
-		block.drawMutex.unlock();
 	}
+	block.drawMutex.unlock();
 }
 
 Scope::Scope() :
@@ -82,6 +80,7 @@ bool Scope::start()
 	QWidget::show();
 
 	inBuffer.resize( inputsCount() );
+	lastInBuffer.resize( inputsCount() );
 	outBuffer.resize( inputsCount() );
 	lastOutBuffer.resize( inputsCount() );
 	setBuffers();
@@ -104,10 +103,20 @@ void Scope::exec( Array< Sample > & )
 	{
 		if ( drawMutex.tryLock() )
 		{
+			if ( !xy )
+			{
+				lastOutBuffer.swap( swapLastInBuffer ? lastInBuffer : outBuffer );
+				swapLastInBuffer = false;
+			}
 			inBuffer.swap( outBuffer );
 			bufferReady = true;
 			drawCond.wakeOne();
 			drawMutex.unlock();
+		}
+		else if ( !xy )
+		{
+			lastInBuffer.swap( inBuffer );
+			swapLastInBuffer = true;
 		}
 		buffPos = 0;
 	}
@@ -119,6 +128,7 @@ void Scope::stop()
 	drawThr.stop();
 	cantClose = false;
 	inBuffer.clear();
+	lastInBuffer.clear();
 	outBuffer.clear();
 	lastOutBuffer.clear();
 }
@@ -150,15 +160,17 @@ void Scope::setBuffers()
 	for ( int i = 0 ; i < inBuffer.count() ; ++i )
 	{
 		inBuffer[ i ].clear();
+		lastInBuffer[ i ].clear();
 		outBuffer[ i ].clear();
 		lastOutBuffer[ i ].clear();
 
 		inBuffer[ i ].resize( size );
+		lastInBuffer[ i ].resize( size );
 		outBuffer[ i ].resize( size );
 		lastOutBuffer[ i ].resize( size );
 	}
+	bufferReady = swapLastInBuffer = false;
 	buffPos = triggerHold = 0;
-	bufferReady = false;
 }
 
 void Scope::draw()
@@ -400,30 +412,23 @@ void ScopeUI::xyToggled( bool b )
 		block.drawMutex.lock();
 		block.xy = b;
 		block.setBuffers();
+		block.paths.clear();
 		block.drawMutex.unlock();
 		block.execMutex.unlock();
-
-		block.paintMutex.lock();
-		block.paths.clear();
-		block.paintMutex.unlock();
-
 		dynamic_cast< QWidget & >( block ).update();
 	}
 }
 void ScopeUI::setTrigger()
 {
-	block.paintMutex.lock();
 	block.drawMutex.lock();
 	block.fallingSlope = slopeCB->currentIndex();
 	block.triggerChn = triggerB->isChecked() ? trgChnB->value() : 0;
 	block.triggerPos = trgPosS->value() / 50.0f;
 	block.drawMutex.unlock();
-	block.paintMutex.unlock();
 	dynamic_cast< QWidget & >( block ).update();
 }
 void ScopeUI::apply()
 {
-	block.paintMutex.lock();
 	block.execMutex.lock();
 	block.drawMutex.lock();
 	block.interp = interpolationCB->currentIndex();
@@ -435,7 +440,6 @@ void ScopeUI::apply()
 	block.scale = scaleB->value();
 	block.drawMutex.unlock();
 	block.execMutex.unlock();
-	block.paintMutex.unlock();
 }
 
 void ScopeUI::checkXY( int numInputs )

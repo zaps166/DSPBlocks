@@ -65,17 +65,16 @@ private:
 	int triggerChn;
 	float triggerPos;
 
-	QVector< QVector< float > > inBuffer, outBuffer, lastOutBuffer;
-	QMutex drawMutex, paintMutex;
+	QVector< QVector< float > > inBuffer, lastInBuffer, outBuffer, lastOutBuffer;
+	QMutex execMutex, drawMutex, paintMutex;
+	bool bufferReady, swapLastInBuffer;
 	int buffPos, triggerHold;
 	QWaitCondition drawCond;
-	bool bufferReady;
 
 	QVector< QPainterPath > paths;
 	QCommonStyle style;
 	QByteArray geo;
 	bool cantClose;
-	QMutex execMutex;
 };
 
 #include "Settings.hpp"
