@@ -1,4 +1,5 @@
 ﻿#include "Scope.hpp"
+#include "Functions.hpp"
 
 #include <QCloseEvent>
 #include <QPainter>
@@ -16,8 +17,52 @@ static inline qreal clip( double v )
 	return v;
 }
 
+DrawThr::DrawThr( Scope &block ) :
+	block( block )
+{}
+
+void DrawThr::start()
+{
+	br = false;
+	QThread::start();
+}
+void DrawThr::stop()
+{
+	block.drawMutex.lock();
+	br = true;
+	block.drawCond.wakeOne();
+	block.drawMutex.unlock();
+	wait();
+}
+
+void DrawThr::run()
+{
+	qint64 t1 = Functions::gettime();
+	qint32 period = Block::getPeriod() * 1000;
+	while ( !br )
+	{
+		block.drawMutex.lock();
+		if ( !br && !block.bufferReady )
+			block.drawCond.wait( &block.drawMutex );
+		if ( !br )
+		{
+			qint64 t2 = Functions::gettime();
+			if ( ( t2 - t1 ) / 1000000 >= period )
+			{
+				block.draw();
+				t1 = t2;
+			}
+			if ( !block.xy )
+				block.lastOutBuffer.swap( block.outBuffer );
+			block.bufferReady = false;
+		}
+		block.drawMutex.unlock();
+	}
+}
+
 Scope::Scope() :
 	Block( "Scope", "Oscyloskop", 1, 1, SINK ),
+	drawThr( *this ),
 	interp( 1 ),
 	samplesVisible( 1024 ),
 	scale( 1.0f ),
@@ -36,70 +81,46 @@ bool Scope::start()
 	cantClose = true;
 	QWidget::show();
 
-	buffer.resize( inputsCount() );
-	setBuffer();
+	inBuffer.resize( inputsCount() );
+	outBuffer.resize( inputsCount() );
+	lastOutBuffer.resize( inputsCount() );
+	setBuffers();
+
+	drawThr.start();
 
 	return true;
 }
 void Scope::setSample( int input, float sample )
 {
-	mutex.lock();
-	buffer[ input ][ xy ? buffPos : ( buffPos + samplesVisible ) ] = sample;
-	mutex.unlock();
+	execMutex.lock();
+	inBuffer[ input ][ buffPos ] = sample;
+	execMutex.unlock();
 }
 void Scope::exec( Array< Sample > & )
 {
-	mutex.lock();
-	if ( xy && ++buffPos == buffer[ 0 ].count() )
+	execMutex.lock();
+	++buffPos;
+	if ( ( xy && buffPos == inBuffer[ 0 ].count() ) || ( !xy && buffPos == samplesVisible ) )
 	{
-		paths.clear();
-		paths.resize( 1 );
-
-		paths[ 0 ].moveTo( clip( buffer[ 0 ][ 0 ] * scale ) + 1.0, -clip( buffer[ 1 ][ 0 ] * scale ) + 1.0 );
-		for ( int j = 1 ; j < buffPos ; ++j )
-			paths[ 0 ].lineTo( clip( buffer[ 0 ][ j ] * scale ) + 1.0, -clip( buffer[ 1 ][ j ] * scale ) + 1.0 );
-
-		QTimer::singleShot( 0, this, SLOT( update() ) );
-		buffPos = 0;
-	}
-	else if ( !xy && ++buffPos == samplesVisible )
-	{
-		int from = -1;
-		if ( !triggerChn ) //bez triggera
-			from = samplesVisible;
-		else
+		if ( drawMutex.tryLock() )
 		{
-			const QVector< float > &trgBuff = buffer[ triggerChn-1 ];
-			float trgPos = triggerPos / scale;
-			int to = samplesVisible * 3 / 2;
-			for ( int i = samplesVisible / 2 + 1 ; i < to ; ++i )
-			{
-				bool trigger = fallingSlope ? ( trgBuff[ i-1 ] > trgPos && trgBuff[ i ] <= trgPos ) : ( trgBuff[ i-1 ] < trgPos && trgBuff[ i ] >= trgPos );
-				if ( trigger )
-				{
-					from = i - samplesVisible / 2;
-					triggerHold = qMax( samplesVisible, getSampleRate() );
-					break;
-				}
-				else if ( triggerHold > 0 )
-					--triggerHold;
-			}
-			if ( from < 0 && !triggerHold )
-				from = samplesVisible;
+			inBuffer.swap( outBuffer );
+			bufferReady = true;
+			drawCond.wakeOne();
+			drawMutex.unlock();
 		}
-		if ( from > -1 )
-			setSamples( from );
-		for ( int i = 0 ; i < buffer.count() ; ++i )
-			memcpy( buffer[ i ].data(), buffer[ i ].data() + samplesVisible, sizeof( float ) * samplesVisible );
 		buffPos = 0;
 	}
-	mutex.unlock();
+	execMutex.unlock();
 }
 void Scope::stop()
 {
 	settings->setRunMode( false );
+	drawThr.stop();
 	cantClose = false;
-	buffer.clear();
+	inBuffer.clear();
+	outBuffer.clear();
+	lastOutBuffer.clear();
 }
 
 Block *Scope::createInstance()
@@ -123,35 +144,87 @@ void Scope::inputsCountChanged( int num )
 	qobject_cast< ScopeUI * >( settings->getAdditionalSettings() )->inputsCountChanged( num );
 }
 
-void Scope::setBuffer()
+void Scope::setBuffers()
 {
-	for ( int i = 0 ; i < buffer.count() ; ++i )
+	int size = xy ? ( getSampleRate() * getPeriod() ) : samplesVisible;
+	for ( int i = 0 ; i < inBuffer.count() ; ++i )
 	{
-		buffer[ i ].clear();
-		buffer[ i ].resize( xy ? ( getSampleRate() * getPeriod() ) : ( samplesVisible * 2 ) );
+		inBuffer[ i ].clear();
+		outBuffer[ i ].clear();
+		lastOutBuffer[ i ].clear();
+
+		inBuffer[ i ].resize( size );
+		outBuffer[ i ].resize( size );
+		lastOutBuffer[ i ].resize( size );
 	}
 	buffPos = triggerHold = 0;
+	bufferReady = false;
 }
-void Scope::setSamples( int from )
+
+void Scope::draw()
 {
-	paths.clear();
-	paths.resize( buffer.count() );
-	for ( int i = 0 ; i < paths.count() ; ++i )
+	if ( xy )
 	{
-		paths[ i ].moveTo( 0.0, -clip( buffer[ i ][ from ] * scale ) + 1.0 );
-		for ( int j = 1 ; j < samplesVisible ; ++j )
+		paintMutex.lock();
+		paths.clear();
+		paths.resize( 1 );
+		paths[ 0 ].moveTo( clip( outBuffer[ 0 ][ 0 ] * scale ) + 1.0, -clip( outBuffer[ 1 ][ 0 ] * scale ) + 1.0 );
+		for ( int j = 1 ; j < outBuffer[ 0 ].count() ; ++j )
+			paths[ 0 ].lineTo( clip( outBuffer[ 0 ][ j ] * scale ) + 1.0, -clip( outBuffer[ 1 ][ j ] * scale ) + 1.0 );
+		paintMutex.unlock();
+	}
+	else
+	{
+		int drawFrom = -1;
+		if ( !triggerChn ) //brak triggera
+			drawFrom = samplesVisible;
+		else
 		{
-			if ( !interp )
-				paths[ i ].lineTo( j, -clip( buffer[ i ][ j+from-1 ] * scale ) + 1.0 );
-			paths[ i ].lineTo( j, -clip( buffer[ i ][ j+from ] * scale ) + 1.0 );
+			const int triggerChnIdx = triggerChn - 1;
+			const float trgPos = triggerPos / scale;
+			int to = samplesVisible * 3 / 2;
+
+			if ( triggerHold > 0 )
+				--triggerHold;
+
+			for ( int i = samplesVisible / 2 + 1 ; i < to ; ++i )
+			{
+				bool trigger = fallingSlope ? ( getSample( triggerChnIdx, i-1 ) > trgPos && getSample( triggerChnIdx, i ) <= trgPos ) : ( getSample( triggerChnIdx, i-1 ) < trgPos && getSample( triggerChnIdx, i ) >= trgPos );
+				if ( trigger )
+				{
+					drawFrom = i - samplesVisible / 2;
+					triggerHold = qMin( round( ( double )Block::getSampleRate() / samplesVisible ), 1.0 / Block::getPeriod() );
+					break;
+				}
+			}
+
+			if ( drawFrom < 0 && !triggerHold )
+				drawFrom = samplesVisible;
+		}
+		if ( drawFrom > -1 )
+		{
+			paintMutex.lock();
+			paths.clear();
+			paths.resize( outBuffer.count() );
+			for ( int i = 0 ; i < paths.count() ; ++i )
+			{
+				paths[ i ].moveTo( 0.0, -clip( getSample( i, drawFrom ) * scale ) + 1.0 );
+				for ( int j = 1 ; j < samplesVisible ; ++j )
+				{
+					if ( !interp )
+						paths[ i ].lineTo( j, -clip( getSample( i, j+drawFrom-1 ) * scale ) + 1.0 );
+					paths[ i ].lineTo( j, -clip( getSample( i, j+drawFrom ) * scale ) + 1.0 );
+				}
+			}
+			paintMutex.unlock();
 		}
 	}
-	QTimer::singleShot( 0, this, SLOT( update() ) );
+	QWidget::update();
 }
 
 void Scope::paintEvent( QPaintEvent * )
 {
-	mutex.lock();
+	paintMutex.lock();
 	if ( !paths.isEmpty() )
 	{
 		QPainter p( this );
@@ -181,7 +254,7 @@ void Scope::paintEvent( QPaintEvent * )
 			p.translate( 0.0, 2.0 );
 		}
 	}
-	mutex.unlock();
+	paintMutex.unlock();
 }
 void Scope::closeEvent( QCloseEvent *event )
 {
@@ -251,7 +324,7 @@ ScopeUI::ScopeUI( Scope &block ) :
 	trgChnB = new QSpinBox;
 	trgChnB->setMinimum( 1 );
 
-	QLabel *trgPosL = new QLabel( "Próg: " );
+	QLabel *trgPosL = new QLabel( "Pozycja: " );
 
 	trgPosS = new QSlider( Qt::Horizontal );
 	trgPosS->setRange( -50, 50 );
@@ -323,34 +396,46 @@ void ScopeUI::xyToggled( bool b )
 	triggerB->setDisabled( b );
 	if ( block.xy != b )
 	{
-		block.mutex.lock();
+		block.execMutex.lock();
+		block.drawMutex.lock();
 		block.xy = b;
-		block.setBuffer();
+		block.setBuffers();
+		block.drawMutex.unlock();
+		block.execMutex.unlock();
+
+		block.paintMutex.lock();
 		block.paths.clear();
-		block.mutex.unlock();
+		block.paintMutex.unlock();
+
 		dynamic_cast< QWidget & >( block ).update();
 	}
 }
 void ScopeUI::setTrigger()
 {
-	block.mutex.lock();
+	block.paintMutex.lock();
+	block.drawMutex.lock();
 	block.fallingSlope = slopeCB->currentIndex();
 	block.triggerChn = triggerB->isChecked() ? trgChnB->value() : 0;
 	block.triggerPos = trgPosS->value() / 50.0f;
-	block.mutex.unlock();
+	block.drawMutex.unlock();
+	block.paintMutex.unlock();
 	dynamic_cast< QWidget & >( block ).update();
 }
 void ScopeUI::apply()
 {
-	block.mutex.lock();
+	block.paintMutex.lock();
+	block.execMutex.lock();
+	block.drawMutex.lock();
 	block.interp = interpolationCB->currentIndex();
 	if ( block.samplesVisible != samplesVisibleB->value() && !block.xy )
 	{
 		block.samplesVisible = samplesVisibleB->value();
-		block.setBuffer();
+		block.setBuffers();
 	}
 	block.scale = scaleB->value();
-	block.mutex.unlock();
+	block.drawMutex.unlock();
+	block.execMutex.unlock();
+	block.paintMutex.unlock();
 }
 
 void ScopeUI::checkXY( int numInputs )

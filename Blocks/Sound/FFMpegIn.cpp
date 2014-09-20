@@ -64,10 +64,12 @@ void FFMpegDec::stop()
 	block.mutex.unlock();
 	if ( isRunning() )
 	{
+		buffer_mutex.lock();
 		br = true;
 		if ( fmtCtx && fmtCtx->pb )
 			fmtCtx->pb->eof_reached = true;
 		buffer_cond.wakeOne();
+		buffer_mutex.unlock();
 		wait();
 	}
 	aStream = NULL;

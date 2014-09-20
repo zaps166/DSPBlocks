@@ -3,12 +3,32 @@
 
 #include "Block.hpp"
 
+#include <QWaitCondition>
 #include <QCommonStyle>
+#include <QThread>
 #include <QMutex>
+
+class Scope;
+
+class DrawThr : public QThread
+{
+public:
+	DrawThr( Scope &block );
+
+	void start();
+	void stop();
+private:
+	void run();
+
+	Scope &block;
+
+	volatile bool br;
+};
 
 class Scope : public Block, public QWidget
 {
 	friend class ScopeUI;
+	friend class DrawThr;
 public:
 	Scope();
 
@@ -24,12 +44,19 @@ private:
 
 	void inputsCountChanged( int num );
 
-	void setBuffer();
-	void setSamples( int from );
+	void setBuffers();
+
+	inline float getSample( int chn, int idx )
+	{
+		return idx < samplesVisible ? lastOutBuffer[ chn ][ idx ] : outBuffer[ chn ][ idx - samplesVisible ];
+	}
+	void draw();
 
 	void paintEvent( QPaintEvent * );
 	void closeEvent( QCloseEvent *event );
 	void showEvent( QShowEvent *event );
+
+	DrawThr drawThr;
 
 	quint8 interp;
 	int samplesVisible;
@@ -38,14 +65,17 @@ private:
 	int triggerChn;
 	float triggerPos;
 
-	QVector< QVector< float > > buffer;
+	QVector< QVector< float > > inBuffer, outBuffer, lastOutBuffer;
+	QMutex drawMutex, paintMutex;
 	int buffPos, triggerHold;
+	QWaitCondition drawCond;
+	bool bufferReady;
 
 	QVector< QPainterPath > paths;
 	QCommonStyle style;
 	QByteArray geo;
 	bool cantClose;
-	QMutex mutex;
+	QMutex execMutex;
 };
 
 #include "Settings.hpp"
