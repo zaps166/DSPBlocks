@@ -19,5 +19,4 @@ win32: {
 	LIBS += -lMusicBlocks
 }
 
-FORMS += \
-    FIR_Designer.ui
+FORMS += FIR_Designer.ui
