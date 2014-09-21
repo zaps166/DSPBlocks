@@ -204,6 +204,8 @@ private:
 
 	int indexOf( const QVector< qreal > &posArr, QPointF pos, bool outputs );
 
+	void setGradient( const QColor &color );
+
 	void paint( QPainter *p, const QStyleOptionGraphicsItem *, QWidget * );
 
 	QRectF boundingRect() const;
@@ -211,6 +213,7 @@ private:
 	void mouseMoveEvent( QGraphicsSceneMouseEvent *event );
 	void mouseReleaseEvent( QGraphicsSceneMouseEvent *event );
 
+	QLinearGradient normalGrad, pressedGrad;
 	QString name, description;
 	QRectF prostokat;
 	Type type;

@@ -47,6 +47,19 @@ Block::Block( const QString &name, const QString &description, int numInputs, in
 	setTransformOriginPoint( size.width() / 2, size.height() / 2 );
 	prostokat = QRectF( QPointF( 0.1 * size.width(), 0.1 * size.height() ), QPointF( 0.9 * size.width(), 0.9 * size.height() ) );
 
+	switch ( type )
+	{
+		case SOURCE:
+			setGradient( QColor( 0x60, 0xFF, 0xA0 ) );
+			break;
+		case PROCESSING:
+			setGradient( QColor( 0xFF, 0x60, 0xA0 ) );
+			break;
+		case SINK:
+			setGradient( QColor( 0x60, 0xA0, 0xFF ) );
+			break;
+	}
+
 	setInputsCount(  type == SOURCE ? 0 : numInputs  > maxIO ? maxIO : numInputs,  false );
 	setOutputsCount( type == SINK   ? 0 : numOutputs > maxIO ? maxIO : numOutputs, false );
 
@@ -267,24 +280,26 @@ int Block::indexOf( const QVector< qreal > &posArr, QPointF pos, bool outputs )
 	return -1;
 }
 
+void Block::setGradient( const QColor &color )
+{
+	normalGrad.setStart( prostokat.width() / 2.0, 0.0 );
+	normalGrad.setFinalStop( prostokat.width() / 2.0, prostokat.height() );
+	normalGrad.setColorAt( 0.0, color.darker( 125 ) );
+	normalGrad.setColorAt( 0.6, color );
+	normalGrad.setColorAt( 1.0, color.darker( 125 ) );
+
+	pressedGrad.setStart( prostokat.width() / 2.0, 0.0 );
+	pressedGrad.setFinalStop( prostokat.width() / 2.0, prostokat.height() );
+	pressedGrad.setColorAt( 0.0, color.darker( 170 ) );
+	pressedGrad.setColorAt( 0.6, color.darker( 120 ) );
+	pressedGrad.setColorAt( 1.0, color.darker( 170 ) );
+}
+
 void Block::paint( QPainter *p, const QStyleOptionGraphicsItem *, QWidget * )
 {
 	p->setClipRect( boundingRect() );
 
-	QColor color;
-	switch ( type )
-	{
-		case SOURCE:
-			color = QColor( 0x60, 0xFF, 0xA0 );
-			break;
-		case PROCESSING:
-			color = QColor( 0xFF, 0x60, 0xA0 );
-			break;
-		case SINK:
-			color = QColor( 0x60, 0xA0, 0xFF );
-			break;
-	}
-	p->fillRect( prostokat, pressed ? color.darker( 120 ) : color );
+	p->fillRect( prostokat, pressed ? pressedGrad : normalGrad );
 	p->drawRect( prostokat );
 
 	foreach ( qreal pos, inputs )
