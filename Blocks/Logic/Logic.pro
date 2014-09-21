@@ -8,8 +8,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
 
-INCLUDEPATH += ../../Lib
-DEPENDPATH  += ../../Lib
+INCLUDEPATH += . ../../Lib
+DEPENDPATH  += . ../../Lib
 
 HEADERS +=          Logic.hpp
 SOURCES += main.cpp Logic.cpp

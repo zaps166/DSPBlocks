@@ -72,7 +72,7 @@ void Counter::exec( Array< Sample > &samples )
 				break;
 		}
 	}
-	currState.swap( lastState );
+	qSwap( currState, lastState );
 }
 void Counter::stop()
 {

@@ -367,7 +367,7 @@ void MainWindow::on_action_U_yj_natywnych_okien_dialogowych_triggered( bool n )
 void MainWindow::showRealSampleRate()
 {
 #ifdef Q_OS_LINUX
-	if ( thread.isRunning() )
+	if ( thread.isRealTimeNow() )
 	{
 		stopStatusUpdates();
 		startStatusUpdates();

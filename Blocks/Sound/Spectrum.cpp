@@ -3,7 +3,6 @@
 #include <QCloseEvent>
 #include <QPainter>
 #include <QDebug>
-#include <QTimer>
 
 extern "C"
 {
@@ -14,7 +13,8 @@ extern "C"
 
 Spectrum::Spectrum() :
 	Block( "Spectrum", "Widmo amplitudowe", 1, 1, SINK ),
-	fftCtx( NULL ), fftCplx( NULL ),
+	drawThr( *this ),
+	fftCtx( NULL ), fftCplxIn( NULL ), fftCplxOut( NULL ),
 	spectogram( false ),
 	fftSize( 1024 ), numSpectrums( 500 ),
 	cantClose( false ),
@@ -39,55 +39,35 @@ bool Spectrum::start()
 	cantClose = true;
 	QWidget::show();
 	setFFT();
+	drawThr.start();
 	return true;
 }
 void Spectrum::setSample( int input, float sample )
 {
-	mutex.lock();
-	fftCplx[ input ][ pos ] = ( FFTComplex ){ sample, 0.0f };
-	mutex.unlock();
+	execMutex.lock();
+	fftCplxIn[ input ][ pos ] = ( FFTComplex ){ sample, 0.0f };
+	execMutex.unlock();
 }
 void Spectrum::exec( Array< Sample > & )
 {
-	mutex.lock();
+	execMutex.lock();
 	if ( ++pos == fftSize )
 	{
-		for ( int i = 0 ; i < inputsCount() ; ++i )
+		if ( drawMutex.tryLock() )
 		{
-			av_fft_permute( fftCtx, fftCplx[ i ] );
-			av_fft_calc( fftCtx, fftCplx[ i ] );
+			qSwap( fftCplxIn, fftCplxOut );
+			bufferReady = true;
+			drawCond.wakeOne();
+			drawMutex.unlock();
 		}
-
-		int spectrumSize = fftSize / 2;
-		if ( spectogram )
-		{
-			quint32 *pixels = ( quint32 * )spectogramImg.bits();
-			int numSpectrumMinus1 = numSpectrums-1;
-			for ( int line = spectrumSize * inputsCount() * numSpectrums - numSpectrums ; line >= 0 ; line -= numSpectrums )
-				memmove( pixels + line, pixels + 1 + line, numSpectrumMinus1 * sizeof *pixels );
-			int y = spectrumSize * inputsCount();
-			for ( int i = inputsCount()-1 ; i >= 0 ; --i )
-				for ( int j = 0 ; j < spectrumSize ; ++j )
-				{
-					quint32 val = sqrt( fftCplx[ i ][ j ].re * fftCplx[ i ][ j ].re + fftCplx[ i ][ j ].im * fftCplx[ i ][ j ].im ) * spectrumScale * 255 / spectrumSize;
-					if ( val > 255 )
-						val = 255;
-					pixels[ --y * numSpectrums + numSpectrumMinus1 ] = QColor( val, val, val ).rgba();
-				}
-		}
-		else for ( int i = 0 ; i < inputsCount() ; ++i )
-			for ( int j = 0 ; j < spectrumSize ; ++j )
-				spectrum[ i ][ j ] = sqrt( fftCplx[ i ][ j ].re * fftCplx[ i ][ j ].re + fftCplx[ i ][ j ].im * fftCplx[ i ][ j ].im ) * spectrumScale / spectrumSize;
-
-		QTimer::singleShot( 0, this, SLOT( update() ) );
-
 		pos = 0;
 	}
-	mutex.unlock();
+	execMutex.unlock();
 }
 void Spectrum::stop()
 {
 	settings->setRunMode( false );
+	drawThr.stop();
 	cantClose = false;
 	freeFFT();
 }
@@ -104,9 +84,8 @@ void Spectrum::setFFT()
 	freeFFT();
 
 	fftCtx = av_fft_init( log2( fftSize ), false );
-	fftCplx = new FFTComplex *[ inputsCount() ];
-	for ( int i = 0 ; i < inputsCount() ; ++i )
-		fftCplx[ i ] = ( FFTComplex * )av_mallocz( fftSize * sizeof( FFTComplex ) );
+	fftCplxIn = allocCplx();
+	fftCplxOut = allocCplx();
 
 	spectrum.clear();
 
@@ -136,13 +115,8 @@ void Spectrum::freeFFT()
 		av_fft_end( fftCtx );
 		fftCtx = NULL;
 	}
-	if ( fftCplx )
-	{
-		for ( int i = 0 ; i < inputsCount() ; ++i )
-			av_free( fftCplx[ i ] );
-		delete[] fftCplx;
-		fftCplx = NULL;
-	}
+	freeCplx( fftCplxIn );
+	freeCplx( fftCplxOut );
 }
 void Spectrum::setLabel()
 {
@@ -169,9 +143,43 @@ void Spectrum::deSerialize( QDataStream &ds )
 	setLabel();
 }
 
+void Spectrum::draw()
+{
+	for ( int i = 0 ; i < inputsCount() ; ++i )
+	{
+		av_fft_permute( fftCtx, fftCplxOut[ i ] );
+		av_fft_calc( fftCtx, fftCplxOut[ i ] );
+	}
+
+	int spectrumSize = fftSize / 2;
+	paintMutex.lock();
+	if ( spectogram )
+	{
+		quint32 *pixels = ( quint32 * )spectogramImg.bits();
+		int numSpectrumMinus1 = numSpectrums-1;
+		for ( int line = spectrumSize * inputsCount() * numSpectrums - numSpectrums ; line >= 0 ; line -= numSpectrums )
+			memmove( pixels + line, pixels + 1 + line, numSpectrumMinus1 * sizeof *pixels );
+		int y = spectrumSize * inputsCount();
+		for ( int i = inputsCount()-1 ; i >= 0 ; --i )
+			for ( int j = 0 ; j < spectrumSize ; ++j )
+			{
+				quint32 val = sqrt( fftCplxOut[ i ][ j ].re * fftCplxOut[ i ][ j ].re + fftCplxOut[ i ][ j ].im * fftCplxOut[ i ][ j ].im ) * spectrumScale * 255 / spectrumSize;
+				if ( val > 255 )
+					val = 255;
+				pixels[ --y * numSpectrums + numSpectrumMinus1 ] = QColor( val, val, val ).rgba();
+			}
+	}
+	else for ( int i = 0 ; i < inputsCount() ; ++i )
+		for ( int j = 0 ; j < spectrumSize ; ++j )
+			spectrum[ i ][ j ] = sqrt( fftCplxOut[ i ][ j ].re * fftCplxOut[ i ][ j ].re + fftCplxOut[ i ][ j ].im * fftCplxOut[ i ][ j ].im ) * spectrumScale / spectrumSize;
+	paintMutex.unlock();
+
+	QWidget::update();
+}
+
 void Spectrum::paintEvent( QPaintEvent * )
 {
-	mutex.lock();
+	paintMutex.lock();
 	QPainter p( this );
 	if ( spectogram )
 		p.drawImage( 0, 0, spectogramImg.scaled( width(), height() ) );
@@ -190,7 +198,7 @@ void Spectrum::paintEvent( QPaintEvent * )
 			p.translate( 0.0, 1.0 );
 		}
 	}
-	mutex.unlock();
+	paintMutex.unlock();
 }
 void Spectrum::closeEvent( QCloseEvent *event )
 {
@@ -226,6 +234,24 @@ void Spectrum::mouseMoveEvent( QMouseEvent *event )
 		pointedFreqStr = QString( "%1 Hz" ).arg( pointedFreq );
 	QWidget::setToolTip( pointedFreqStr );
 	QWidget::mouseMoveEvent( event );
+}
+
+FFTComplex **Spectrum::allocCplx()
+{
+	FFTComplex **fftCplx = new FFTComplex *[ inputsCount() ];
+	for ( int i = 0 ; i < inputsCount() ; ++i )
+		fftCplx[ i ] = ( FFTComplex * )av_mallocz( fftSize * sizeof( FFTComplex ) );
+	return fftCplx;
+}
+void Spectrum::freeCplx( FFTComplex **&fftCplx )
+{
+	if ( fftCplx )
+	{
+		for ( int i = 0 ; i < inputsCount() ; ++i )
+			av_free( fftCplx[ i ] );
+		delete[] fftCplx;
+		fftCplx = NULL;
+	}
 }
 
 #include <QDoubleSpinBox>
@@ -287,14 +313,16 @@ void SpectrumUI::setValue()
 	int fftSize = fftSizeB->currentText().toInt();
 	if ( block.fftSize != fftSize || block.spectogram != spectogramB->isChecked() || block.numSpectrums != numSpectrumsB->value() || block.spectrumScale != scaleB->value() )
 	{
-		block.mutex.lock();
+		block.execMutex.lock();
+		block.drawMutex.lock();
 		block.fftSize = fftSize;
 		block.spectogram = spectogramB->isChecked();
 		block.numSpectrums = numSpectrumsB->value();
 		block.spectrumScale = scaleB->value();
 		if ( dynamic_cast< QWidget & >( block ).isVisible() )
 			block.setFFT();
-		block.mutex.unlock();
+		block.drawMutex.unlock();
+		block.execMutex.unlock();
 		block.setLabel();
 	}
 }

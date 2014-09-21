@@ -57,9 +57,13 @@ public:
 		return rt_mode;
 	}
 
-	qint32 getRealSampleRate() const
+	inline qint32 getRealSampleRate() const
 	{
 		return realSampleRate;
+	}
+	inline bool isRealTimeNow()
+	{
+		return isRunning() && rt;
 	}
 #endif
 
@@ -77,6 +81,7 @@ private:
 
 #ifdef Q_OS_LINUX
 	qint32 realSampleRate;
+	bool rt;
 
 	static bool realTime;
 	static RT_MODE rt_mode;

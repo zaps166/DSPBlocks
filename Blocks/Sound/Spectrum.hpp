@@ -2,14 +2,14 @@
 #define SPECTRUM_HPP
 
 #include "Block.hpp"
+#include "DrawHelper.hpp"
 
 #include <QCommonStyle>
-#include <QMutex>
 
 struct FFTContext;
 struct FFTComplex;
 
-class Spectrum : public Block, public QWidget
+class Spectrum : public Block, public QWidget, public DrawHelper
 {
 	friend class SpectrumUI;
 public:
@@ -29,14 +29,22 @@ private:
 	void serialize( QDataStream &ds ) const;
 	void deSerialize( QDataStream &ds );
 
+	void draw();
+
 	void paintEvent( QPaintEvent * );
 	void closeEvent( QCloseEvent *event );
 	void showEvent( QShowEvent *event );
 	void mouseMoveEvent( QMouseEvent *event );
 
+	FFTComplex **allocCplx();
+	void freeCplx( FFTComplex **&fftCplx );
+
+	DrawThr drawThr;
+
 	int pos;
 	FFTContext *fftCtx;
-	FFTComplex **fftCplx;
+	FFTComplex **fftCplxIn, **fftCplxOut;
+	QMutex execMutex, paintMutex;
 
 	bool spectogram;
 	int fftSize, numSpectrums;
@@ -47,7 +55,6 @@ private:
 	QByteArray geo;
 	QCommonStyle style;
 	QLinearGradient linearGrad;
-	QMutex mutex;
 	bool cantClose;
 	float spectrumScale;
 };

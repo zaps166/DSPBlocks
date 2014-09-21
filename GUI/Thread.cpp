@@ -38,6 +38,7 @@ void Thread::start( const QVector< Block * > &sources, quint64 simSamples, bool 
 
 #ifdef Q_OS_LINUX
 	realSampleRate = -1;
+	rt = false;
 #endif
 
 	QThread::start();
@@ -68,7 +69,7 @@ void Thread::run()
 		RT_TASK *rtai_task;
 		RTIME rtai_period;
 	#endif
-	bool rt = isBlocking ? false : Thread::isRealTime();
+	rt = isBlocking ? false : Thread::isRealTime();
 
 	if ( !rt )
 	{

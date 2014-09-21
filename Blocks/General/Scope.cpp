@@ -1,9 +1,7 @@
 ﻿#include "Scope.hpp"
-#include "Functions.hpp"
 
 #include <QCloseEvent>
 #include <QPainter>
-#include <QTimer>
 #include <QDebug>
 
 static inline qreal clip( double v )
@@ -15,47 +13,6 @@ static inline qreal clip( double v )
 	if ( v != v ) //NaN
 		v = 0.0;
 	return v;
-}
-
-DrawThr::DrawThr( Scope &block ) :
-	block( block )
-{}
-
-void DrawThr::start()
-{
-	br = false;
-	QThread::start();
-}
-void DrawThr::stop()
-{
-	block.drawMutex.lock();
-	br = true;
-	block.drawCond.wakeOne();
-	block.drawMutex.unlock();
-	wait();
-}
-
-void DrawThr::run()
-{
-	qint64 t1 = Functions::gettime();
-	qint32 period = Block::getPeriod() * 1000;
-	block.drawMutex.lock();
-	while ( !br )
-	{
-		if ( !br && !block.bufferReady )
-			block.drawCond.wait( &block.drawMutex );
-		if ( !br )
-		{
-			qint64 t2 = Functions::gettime();
-			if ( ( t2 - t1 ) / 1000000 >= period )
-			{
-				block.draw();
-				t1 = t2;
-			}
-			block.bufferReady = false;
-		}
-	}
-	block.drawMutex.unlock();
 }
 
 Scope::Scope() :
@@ -105,17 +62,17 @@ void Scope::exec( Array< Sample > & )
 		{
 			if ( !xy )
 			{
-				lastOutBuffer.swap( swapLastInBuffer ? lastInBuffer : outBuffer );
+				qSwap( lastOutBuffer, swapLastInBuffer ? lastInBuffer : outBuffer );
 				swapLastInBuffer = false;
 			}
-			inBuffer.swap( outBuffer );
+			qSwap( inBuffer, outBuffer );
 			bufferReady = true;
 			drawCond.wakeOne();
 			drawMutex.unlock();
 		}
 		else if ( !xy )
 		{
-			lastInBuffer.swap( inBuffer );
+			qSwap( lastInBuffer, inBuffer );
 			swapLastInBuffer = true;
 		}
 		buffPos = 0;
@@ -323,6 +280,8 @@ ScopeUI::ScopeUI( Scope &block ) :
 	scaleB->setRange( 0.001, 100.0 );
 	scaleB->setSuffix( "x" );
 
+	QPushButton *applyB = new QPushButton( "&Zastosuj" );
+
 	xyB = new QCheckBox( "XY" );
 
 	triggerB = new QGroupBox( "Trigger" );
@@ -349,8 +308,6 @@ ScopeUI::ScopeUI( Scope &block ) :
 	trgLayout->addWidget( trgPosS, 2, 1, 1, 1 );
 	trgLayout->setMargin( 3 );
 
-	QPushButton *applyB = new QPushButton( "&Zastosuj" );
-
 	QGridLayout *layout = new QGridLayout( this );
 	layout->addWidget( interpolationL, 0, 0, 1, 1 );
 	layout->addWidget( interpolationCB, 0, 1, 1, 1 );
@@ -358,9 +315,9 @@ ScopeUI::ScopeUI( Scope &block ) :
 	layout->addWidget( samplesVisibleB, 1, 1, 1, 1 );
 	layout->addWidget( scaleL, 2, 0, 1, 1 );
 	layout->addWidget( scaleB, 2, 1, 1, 1 );
-	layout->addWidget( xyB, 3, 1, 1, 1 );
-	layout->addWidget( triggerB, 4, 0, 1, 2 );
-	layout->addWidget( applyB, 5, 0, 1, 2 );
+	layout->addWidget( applyB, 3, 0, 1, 2 );
+	layout->addWidget( xyB, 4, 0, 1, 2 );
+	layout->addWidget( triggerB, 5, 0, 1, 2 );
 	layout->setMargin( 3 );
 
 	connect( applyB, SIGNAL( clicked() ), this, SLOT( apply() ) );

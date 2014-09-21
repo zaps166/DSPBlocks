@@ -8,8 +8,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
 
-INCLUDEPATH += ../../Lib
-DEPENDPATH  += ../../Lib
+INCLUDEPATH += . ../../Lib
+DEPENDPATH  += . ../../Lib
 
 HEADERS +=          FFMpegIn.hpp Spectrum.hpp Equalizer.hpp PortAudioOut.hpp PortAudioIn.hpp PortAudio.hpp Image.hpp
 SOURCES += main.cpp FFMpegIn.cpp Spectrum.cpp Equalizer.cpp PortAudioOut.cpp PortAudioIn.cpp PortAudio.cpp Image.cpp

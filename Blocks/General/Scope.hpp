@@ -2,33 +2,13 @@
 #define SCOPE_HPP
 
 #include "Block.hpp"
+#include "DrawHelper.hpp"
 
-#include <QWaitCondition>
 #include <QCommonStyle>
-#include <QThread>
-#include <QMutex>
 
-class Scope;
-
-class DrawThr : public QThread
-{
-public:
-	DrawThr( Scope &block );
-
-	void start();
-	void stop();
-private:
-	void run();
-
-	Scope &block;
-
-	volatile bool br;
-};
-
-class Scope : public Block, public QWidget
+class Scope : public Block, public QWidget, public DrawHelper
 {
 	friend class ScopeUI;
-	friend class DrawThr;
 public:
 	Scope();
 
@@ -66,10 +46,9 @@ private:
 	float triggerPos;
 
 	QVector< QVector< float > > inBuffer, lastInBuffer, outBuffer, lastOutBuffer;
-	QMutex execMutex, drawMutex, paintMutex;
-	bool bufferReady, swapLastInBuffer;
+	QMutex execMutex, paintMutex;
 	int buffPos, triggerHold;
-	QWaitCondition drawCond;
+	bool swapLastInBuffer;
 
 	QVector< QPainterPath > paths;
 	QCommonStyle style;
