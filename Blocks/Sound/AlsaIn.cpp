@@ -1,4 +1,5 @@
 #include "AlsaIn.hpp"
+#include "Global.hpp"
 #include "Array.hpp"
 
 AlsaIn::AlsaIn() :
@@ -7,8 +8,8 @@ AlsaIn::AlsaIn() :
 
 bool AlsaIn::start()
 {
-	samplesToRead = getBufferSize();
-	if ( !snd_pcm_open( &snd, devName.toLocal8Bit(), SND_PCM_STREAM_CAPTURE, 0 ) && !snd_pcm_set_params( snd, SND_PCM_FORMAT_S32, SND_PCM_ACCESS_RW_INTERLEAVED, outputsCount(), getSampleRate(), true, Block::getPeriod() * 4000000 ) )
+	samplesToRead = Global::getBufferSize();
+	if ( !snd_pcm_open( &snd, devName.toLocal8Bit(), SND_PCM_STREAM_CAPTURE, 0 ) && !snd_pcm_set_params( snd, SND_PCM_FORMAT_S32, SND_PCM_ACCESS_RW_INTERLEAVED, outputsCount(), Global::getSampleRate(), true, Global::getPeriod() * 4000000 ) )
 	{
 		settings->setRunMode( true );
 		outBufferSize = outBufferPos = 0;

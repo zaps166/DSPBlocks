@@ -1,4 +1,5 @@
 #include "LADSPA.hpp"
+#include "Global.hpp"
 #include "Array.hpp"
 
 #include <QDoubleSpinBox>
@@ -28,7 +29,7 @@ bool LADSPA::start()
 	int inPort = 0, outPort = 0;
 	for ( int j = 0 ; j < buffer.count() ; ++j )
 	{
-		LADSPA_Handle ladspa_instance = ld.instantiate( &ld, getSampleRate() );
+		LADSPA_Handle ladspa_instance = ld.instantiate( &ld, Global::getSampleRate() );
 		if ( !ladspa_instance )
 			return false;
 		int ctlPort = 0;
@@ -146,7 +147,7 @@ LADSPA_UI::LADSPA_UI( LADSPA &block ) :
 		foreach ( int i, ladspa_descriptors_idx )
 		{
 			const LADSPA_PortRangeHintDescriptor hintDescr = ld.PortRangeHints[ i ].HintDescriptor;
-			const int multiplier_srate = LADSPA_IS_HINT_SAMPLE_RATE( hintDescr ) ? Block::getSampleRate() : 1.0f;
+			const int multiplier_srate = LADSPA_IS_HINT_SAMPLE_RATE( hintDescr ) ? Global::getSampleRate() : 1.0f;
 			const LADSPA_Data lower = LADSPA_IS_HINT_BOUNDED_BELOW( hintDescr ) ? ld.PortRangeHints[ i ].LowerBound * multiplier_srate : -100.0f;
 			const LADSPA_Data upper = LADSPA_IS_HINT_BOUNDED_ABOVE( hintDescr ) ? ld.PortRangeHints[ i ].UpperBound * multiplier_srate :  100.0f;
 			LADSPA_Data &ctl = control[ j ];
@@ -210,8 +211,8 @@ LADSPA_UI::LADSPA_UI( LADSPA &block ) :
 				connect( slider, SIGNAL( valueChanged( int ) ), this, SLOT( setValue( int ) ) );
 				connect( valueB, SIGNAL( valueChanged( double ) ), this, SLOT( setValue( double ) ) );
 
-				slider->setProperty( "second_control", qVariantFromValue( ( uintptr_t )valueB ) );
-				valueB->setProperty( "second_control", qVariantFromValue( ( uintptr_t )slider ) );
+				slider->setProperty( "second_control", qVariantFromValue( ( quintptr )valueB ) );
+				valueB->setProperty( "second_control", qVariantFromValue( ( quintptr )slider ) );
 
 				slider->setProperty( "multiplier", multiplier );
 				valueB->setProperty( "multiplier", multiplier );
@@ -243,11 +244,11 @@ void LADSPA_UI::setValue( int v )
 	{
 		const int multiplier = sender()->property( "multiplier" ).toInt();
 		data = v / ( float )multiplier;
-		( ( QDoubleSpinBox * )sender()->property( "second_control" ).value< uintptr_t >() )->setValue( v / ( double )multiplier );
+		( ( QDoubleSpinBox * )sender()->property( "second_control" ).value< quintptr >() )->setValue( v / ( double )multiplier );
 	}
 }
 void LADSPA_UI::setValue( double v )
 {
 	control[ sender()->property( "ctlPort" ).toInt() ] = v;
-	( ( QSlider * )sender()->property( "second_control" ).value< uintptr_t >() )->setValue( v * sender()->property( "multiplier" ).toInt() );
+	( ( QSlider * )sender()->property( "second_control" ).value< quintptr >() )->setValue( v * sender()->property( "multiplier" ).toInt() );
 }

@@ -1,4 +1,5 @@
 #include "RMS.hpp"
+#include "Global.hpp"
 #include "Array.hpp"
 
 #include <math.h>
@@ -114,7 +115,7 @@ void RMS::setLabel()
 }
 void RMS::calcNumSamples()
 {
-	numSamples = ms * Block::getSampleRate() / 1000;
+	numSamples = ms * Global::getSampleRate() / 1000;
 	if ( !numSamples )
 		numSamples = 1;
 }

@@ -1,4 +1,5 @@
 #include "PortAudioIn.hpp"
+#include "Global.hpp"
 #include "Array.hpp"
 
 #include <QDebug>
@@ -9,9 +10,9 @@ PortAudioIn::PortAudioIn() :
 
 bool PortAudioIn::start()
 {
-	samplesToRead = getBufferSize();
-	PaStreamParameters streamParams = { getDeviceIndex( devName ), outputsCount(), paFloat32, Block::getPeriod()*4, NULL };
-	if ( Pa_OpenStream( &stream, &streamParams, NULL, getSampleRate(), 0, 0, NULL, NULL ) == paNoError )
+	samplesToRead = Global::getBufferSize();
+	PaStreamParameters streamParams = { getDeviceIndex( devName ), outputsCount(), paFloat32, Global::getPeriod()*4, NULL };
+	if ( Pa_OpenStream( &stream, &streamParams, NULL, Global::getSampleRate(), 0, 0, NULL, NULL ) == paNoError )
 	{
 		err = false;
 		settings->setRunMode( true );

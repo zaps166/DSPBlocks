@@ -1,4 +1,5 @@
 ﻿#include "Scope.hpp"
+#include "Global.hpp"
 
 #include <QCloseEvent>
 #include <QPainter>
@@ -113,7 +114,7 @@ void Scope::inputsCountChanged( int num )
 
 void Scope::setBuffers()
 {
-	int size = xy ? ( getSampleRate() * getPeriod() ) : samplesVisible;
+	int size = xy ? ( Global::getSampleRate() * Global::getPeriod() ) : samplesVisible;
 	for ( int i = 0 ; i < inBuffer.count() ; ++i )
 	{
 		inBuffer[ i ].clear();
@@ -162,7 +163,7 @@ void Scope::draw()
 				if ( trigger )
 				{
 					drawFrom = i - samplesVisible / 2;
-					triggerHold = qMin( round( ( double )Block::getSampleRate() / samplesVisible ), 1.0 / Block::getPeriod() );
+					triggerHold = qMin( round( ( double )Global::getSampleRate() / samplesVisible ), 1.0 / Global::getPeriod() );
 					break;
 				}
 			}
@@ -269,7 +270,7 @@ ScopeUI::ScopeUI( Scope &block ) :
 	interpolationCB->addItems( QStringList() << "Zero order hold" << "Liniowa" );
 
 	samplesVisibleB = new QSpinBox;
-	samplesVisibleB->setRange( 2, Block::getSampleRate() * 2 );
+	samplesVisibleB->setRange( 2, Global::getSampleRate() * 2 );
 
 	QLabel *scaleL = new QLabel( "Skala: " );
 	scaleL->setAlignment( Qt::AlignRight );

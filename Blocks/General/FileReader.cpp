@@ -1,4 +1,5 @@
 #include "FileReader.hpp"
+#include "Global.hpp"
 #include "Array.hpp"
 
 FileReader::FileReader() :
@@ -144,7 +145,7 @@ void FileReaderUI::setFileName()
 }
 void FileReaderUI::browseFile()
 {
-	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik do odczytu", fileE->text(), QString(), NULL, Block::getNativeFileDialogFlag() );
+	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik do odczytu", fileE->text(), QString(), NULL, Global::getNativeFileDialogFlag() );
 	if ( !newFile.isEmpty() )
 		fileE->setText( newFile );
 }

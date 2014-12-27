@@ -1,4 +1,5 @@
 #include "JS.hpp"
+#include "Global.hpp"
 #include "Array.hpp"
 
 #include <QMessageBox>
@@ -58,7 +59,7 @@ bool JS::compile( bool showErr )
 {
 	scriptE.evaluate
 	(
-		"var sample_rate = " + QString::number( getSampleRate() ) + ";"
+		"var sample_rate = " + QString::number( Global::getSampleRate() ) + ";"
 		"var inputs_count = " + QString::number( inputsCount() ) + ";"
 		"var outputs_count = " + QString::number( outputsCount() ) + ";"
 		+ code1 +

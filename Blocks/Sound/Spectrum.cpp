@@ -1,4 +1,5 @@
 ﻿#include "Spectrum.hpp"
+#include "Global.hpp"
 
 #include <QCloseEvent>
 #include <QPainter>
@@ -221,7 +222,7 @@ void Spectrum::showEvent( QShowEvent *event )
 }
 void Spectrum::mouseMoveEvent( QMouseEvent *event )
 {
-	int maxFreq = Block::getSampleRate() / 2;
+	int maxFreq = Global::getSampleRate() / 2;
 	QString pointedFreqStr;
 	int pointedFreq;
 	if ( spectogram )

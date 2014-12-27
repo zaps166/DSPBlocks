@@ -1,4 +1,5 @@
 #include "Sine.hpp"
+#include "Global.hpp"
 #include "Array.hpp"
 
 #include <math.h>
@@ -18,7 +19,7 @@ bool Sine::start()
 void Sine::exec( Array< Sample > &samples )
 {
 	mutex.lock();
-	float sine_sample = sin( 2.0f * M_PI * hz * lastPos / getSampleRate() - phase );
+	float sine_sample = sin( 2.0f * M_PI * hz * lastPos / Global::getSampleRate() - phase );
 	switch ( square )
 	{
 		case 1:
@@ -53,8 +54,8 @@ void Sine::setSinePos( double hz1, double hz2 )
 		lastPos = 0.0;
 	else
 	{
-		double k = hz1 * lastPos / getSampleRate();
-		lastPos = ( k - ( int )k ) * getSampleRate() / hz2;
+		double k = hz1 * lastPos / Global::getSampleRate();
+		lastPos = ( k - ( int )k ) * Global::getSampleRate() / hz2;
 	}
 }
 void Sine::setLabel()
@@ -127,7 +128,7 @@ SineUI::SineUI( Sine &block ) :
 
 void SineUI::prepare()
 {
-	hzS->setRange( 0.0, Block::getSampleRate() / 2 );
+	hzS->setRange( 0.0, Global::getSampleRate() / 2 );
 	hzS->setValue( block.hz );
 	hzB->setValue( block.hz );
 	phaseB->setValue( block.phase * 180.0 / M_PI );

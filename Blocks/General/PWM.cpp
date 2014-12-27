@@ -1,4 +1,5 @@
 #include "PWM.hpp"
+#include "Global.hpp"
 #include "Array.hpp"
 
 #include "Settings.hpp"
@@ -20,8 +21,8 @@ void PWM::setSample( int input, float sample )
 	switch ( input )
 	{
 		case 0:
-			if ( sample > getSampleRate() / 2.0f )
-				freq = getSampleRate() / 2.0f;
+			if ( sample > Global::getSampleRate() / 2.0f )
+				freq = Global::getSampleRate() / 2.0f;
 			else if ( sample < 0.0f )
 				freq = 0.0f;
 			else
@@ -39,7 +40,7 @@ void PWM::setSample( int input, float sample )
 }
 void PWM::exec( Array< Sample > &samples )
 {
-	quint32 period = round( getSampleRate() / freq );
+	quint32 period = round( Global::getSampleRate() / freq );
 	quint32 hi_samples = round( period * duty );
 	quint32 lo_samples = period - hi_samples;
 

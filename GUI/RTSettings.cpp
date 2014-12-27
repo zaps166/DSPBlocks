@@ -1,35 +1,37 @@
 #include "RTSettings.hpp"
-#include "Thread.hpp"
+#include "Global.hpp"
+
+#include <QThread>
 
 RTSettings::RTSettings( QWidget *parent ) :
 	QDialog( parent )
 {
 	ui.setupUi( this );
 
-	ui.groupBox->setChecked( Thread::isRealTime() );
+	ui.groupBox->setChecked( Global::isRealTime() );
 
-	ui.schedB->setCurrentIndex( Thread::getSched() );
+	ui.schedB->setCurrentIndex( Global::getSched() );
 	setPriorityRange( ui.schedB->currentIndex() );
-	ui.priorityB->setValue( Thread::getPriority() );
+	ui.priorityB->setValue( Global::getPriority() );
 
 	ui.cpuB->setMaximum( QThread::idealThreadCount() );
-	ui.cpuB->setValue( Thread::getCPU() );
+	ui.cpuB->setValue( Global::getCPU() );
 
 #ifndef USE_RTAI
 	ui.rtaiB->close();
 #endif
 
-	switch ( Thread::getRtMode() )
+	switch ( Global::getRtMode() )
 	{
-		case Thread::NANOSLEEP:
+		case Global::NANOSLEEP:
 			ui.nanosleepB->setChecked( true );
 			break;
 #ifdef USE_RTAI
-		case Thread::RTAI:
+		case Global::RTAI:
 			ui.rtaiB->setChecked( true );
 			break;
 #endif
-		case Thread::CLOCK_NANOSLEEP:
+		case Global::CLOCK_NANOSLEEP:
 		default:
 			ui.clockNanosleepB->setChecked( true );
 			break;
@@ -50,13 +52,13 @@ void RTSettings::setPriorityRange( int sched )
 }
 void RTSettings::accept()
 {
-	int rt_mode = Thread::CLOCK_NANOSLEEP;
+	int rt_mode = Global::CLOCK_NANOSLEEP;
 	if ( ui.nanosleepB->isChecked() )
-		rt_mode = Thread::NANOSLEEP;
+		rt_mode = Global::NANOSLEEP;
 #ifdef USE_RTAI
 	else if ( ui.rtaiB->isChecked() )
 		rt_mode = Thread::RTAI;
 #endif
-	Thread::setRealTime( ui.groupBox->isChecked(), ui.cpuB->value(), ui.schedB->currentIndex(), ui.priorityB->value(), rt_mode );
+	Global::setRealTime( ui.groupBox->isChecked(), ui.cpuB->value(), ui.schedB->currentIndex(), ui.priorityB->value(), rt_mode );
 	QDialog::accept();
 }

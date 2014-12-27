@@ -1,4 +1,5 @@
 #include "PortAudioOut.hpp"
+#include "Global.hpp"
 
 PortAudioOut::PortAudioOut() :
 	PortAudio( "PortAudio Output", "Wyjście dźwięku PortAudio", 1, 0, SINK )
@@ -6,9 +7,9 @@ PortAudioOut::PortAudioOut() :
 
 bool PortAudioOut::start()
 {
-	samplesToWrite = getBufferSize();
-	PaStreamParameters streamParams = { getDeviceIndex( devName ), inputsCount(), paFloat32, Block::getPeriod()*4, NULL };
-	if ( Pa_OpenStream( &stream, NULL, &streamParams, getSampleRate(), 0, 0, NULL, NULL ) == paNoError )
+	samplesToWrite = Global::getBufferSize();
+	PaStreamParameters streamParams = { getDeviceIndex( devName ), inputsCount(), paFloat32, Global::getPeriod()*4, NULL };
+	if ( Pa_OpenStream( &stream, NULL, &streamParams, Global::getSampleRate(), 0, 0, NULL, NULL ) == paNoError )
 	{
 		err = false;
 		settings->setRunMode( true );

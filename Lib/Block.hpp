@@ -3,27 +3,17 @@
 
 #include <QCoreApplication>
 #include <QGraphicsItem>
-#include <QFileDialog>
 #include <QMenu>
 #include <QPen>
 
-#include <stdint.h>
-#include <math.h>
-
 template< typename T > class Array;
 class Settings;
-
-#define DEFAULT_SAMPLERATE 48000
-#define DEFAULT_REFTIME 60
 
 class Block : public QGraphicsItem
 {
 	Q_DISABLE_COPY( Block )
 	friend class Settings;
 	friend class Scene;
-
-	static bool nativeFileDialogFlag;
-	static int sampleRate, refTime;
 public:
 	enum Type { SOURCE, PROCESSING, SINK };
 
@@ -34,46 +24,6 @@ public:
 	};
 
 	static void setIDCounter( quint16 id );
-
-	static inline void setNativeFileDialog( bool n )
-	{
-		nativeFileDialogFlag = n;
-	}
-	static inline QFileDialog::Option getNativeFileDialogFlag()
-	{
-		return nativeFileDialogFlag ? ( QFileDialog::Option )0 : QFileDialog::DontUseNativeDialog;
-	}
-	static inline bool isNativeFileDialog()
-	{
-		return nativeFileDialogFlag;
-	}
-
-	static inline void setSampleRateAndRefTime( int srate, int refT )
-	{
-		sampleRate = qMax( srate, 1 );
-		refTime = qMin( refT, sampleRate );
-	}
-	static inline void resetSampleRateAndRefTime()
-	{
-		sampleRate = DEFAULT_SAMPLERATE;
-		refTime = DEFAULT_REFTIME;
-	}
-	static inline int getSampleRate()
-	{
-		return sampleRate;
-	}
-	static inline int getRefTime()
-	{
-		return refTime;
-	}
-	static inline double getPeriod( double fallback = 1.0 / DEFAULT_REFTIME )
-	{
-		return refTime ? ( 1.0 / refTime ) : fallback;
-	}
-	static inline int getBufferSize()
-	{
-		return ceil( ( double )sampleRate / ( double )refTime );
-	}
 
 	Block( const QString &name, const QString &description, int numInputs, int numOutputs, Type type );
 	virtual ~Block();
@@ -155,7 +105,7 @@ protected:
 
 	template< typename T > QList< T * > getBlocksByType() const
 	{
-		QList< Block * > *allBlocks = ( QList< Block * > * )qApp->property( "allBlocks" ).value< uintptr_t >();
+		QList< Block * > *allBlocks = ( QList< Block * > * )qApp->property( "allBlocks" ).value< quintptr >();
 		QList< T * > blocksByType;
 		if ( allBlocks )
 			foreach ( Block *block, *allBlocks )

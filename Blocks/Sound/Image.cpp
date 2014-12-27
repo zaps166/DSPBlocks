@@ -1,4 +1,5 @@
 #include "Image.hpp"
+#include "Global.hpp"
 #include "Array.hpp"
 
 extern "C"
@@ -247,7 +248,7 @@ void ImageUI::itemsVisible()
 
 void ImageUI::browseFile()
 {
-	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik obrazka", fileE->text(), QString(), NULL, Block::getNativeFileDialogFlag() );
+	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik obrazka", fileE->text(), QString(), NULL, Global::getNativeFileDialogFlag() );
 	if ( !newFile.isEmpty() )
 		fileE->setText( newFile );
 }

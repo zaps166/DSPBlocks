@@ -1,4 +1,5 @@
 #include "AlsaOut.hpp"
+#include "Global.hpp"
 
 AlsaOut::AlsaOut() :
 	Alsa( "ALSA output", "Wyjście dźwięku ALSA", 1, 0, SINK )
@@ -6,8 +7,8 @@ AlsaOut::AlsaOut() :
 
 bool AlsaOut::start()
 {
-	samplesToWrite = getBufferSize();
-	if ( !snd_pcm_open( &snd, devName.toLocal8Bit(), SND_PCM_STREAM_PLAYBACK, 0 ) && !snd_pcm_set_params( snd, SND_PCM_FORMAT_S32, SND_PCM_ACCESS_RW_INTERLEAVED, inputsCount(), getSampleRate(), true, Block::getPeriod() * 4000000 ) )
+	samplesToWrite = Global::getBufferSize();
+	if ( !snd_pcm_open( &snd, devName.toLocal8Bit(), SND_PCM_STREAM_PLAYBACK, 0 ) && !snd_pcm_set_params( snd, SND_PCM_FORMAT_S32, SND_PCM_ACCESS_RW_INTERLEAVED, inputsCount(), Global::getSampleRate(), true, Global::getPeriod() * 4000000 ) )
 	{
 		settings->setRunMode( true );
 		buffer.resize( inputsCount() );

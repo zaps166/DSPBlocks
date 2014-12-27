@@ -1,4 +1,5 @@
 #include "FFMpegIn.hpp"
+#include "Global.hpp"
 #include "Array.hpp"
 
 #include <QDebug>
@@ -44,7 +45,7 @@ bool FFMpegDec::start()
 		{
 			aCodec = aStream->codec;
 			channels = aCodec->channels;
-			swr = swr_alloc_set_opts( NULL, av_get_default_channel_layout( block.outputsCount() ), AV_SAMPLE_FMT_FLT, Block::getSampleRate(), av_get_default_channel_layout( channels ), aCodec->sample_fmt, aCodec->sample_rate, 0, NULL );
+			swr = swr_alloc_set_opts( NULL, av_get_default_channel_layout( block.outputsCount() ), AV_SAMPLE_FMT_FLT, Global::getSampleRate(), av_get_default_channel_layout( channels ), aCodec->sample_fmt, aCodec->sample_rate, 0, NULL );
 			av_opt_set_int( swr, "linear_interp", true, 0 );
 			if ( !swr_init( swr ) )
 			{
@@ -141,7 +142,7 @@ void FFMpegDec::run()
 				{
 					if ( aCodec->channels == channels )
 					{
-						const int out_size = ceil( frame->nb_samples * ( float )Block::getSampleRate() / ( float )aCodec->sample_rate );
+						const int out_size = ceil( frame->nb_samples * ( float )Global::getSampleRate() / ( float )aCodec->sample_rate );
 						int buffer_size = outBufferSize + out_size * block.outputsCount();
 
 						if ( outBuffer[ buffer_idx ].size() < buffer_size )
@@ -218,7 +219,7 @@ void FFMpegDec::run()
 FFMpegIn::FFMpegIn() :
 	Block( "FFMpeg input", "Odtwarza pliki dźwiękowe", 0, 1, SOURCE ),
 	ffdec( *this ),
-	loop( false ), highPriority( false ), nonblocking( true )
+	loop( false ), highPriority( false ), nonblocking( Global::isRealTime() )
 {}
 
 bool FFMpegIn::start()
@@ -355,7 +356,7 @@ void FFMpegInUI::seek( int t )
 }
 void FFMpegInUI::browseFile()
 {
-	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik dźwiękowy", fileE->text(), QString(), NULL, Block::getNativeFileDialogFlag() );
+	QString newFile = QFileDialog::getOpenFileName( this, "Wybierz plik dźwiękowy", fileE->text(), QString(), NULL, Global::getNativeFileDialogFlag() );
 	if ( !newFile.isEmpty() )
 	{
 		fileE->setText( newFile );

@@ -4,7 +4,7 @@
 
 #include <sys/io.h>
 
-static inline int16_t recvSample( uint8_t chn )
+static inline int16_t recvSample( quint8 chn )
 {
 	outb( ( chn << 7 ) | 0x40, EPP_DATA );
 	return ( int16_t )( ( ( inb( EPP_DATA ) & 0x1F ) << 5 ) | ( inb( EPP_DATA ) >> 3 ) ) - 0x1FF;

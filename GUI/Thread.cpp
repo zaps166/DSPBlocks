@@ -1,7 +1,7 @@
 #include "Thread.hpp"
+#include "Global.hpp"
 #include "Block.hpp"
 #include "Array.hpp"
-#include "Functions.hpp"
 
 #define SECOND (1000000000LL)
 
@@ -17,10 +17,6 @@
 	#ifdef USE_RTAI
 		#include <rtai_lxrt.h>
 	#endif
-
-	bool Thread::realTime = false;
-	Thread::RT_MODE Thread::rt_mode = Thread::CLOCK_NANOSLEEP;
-	int Thread::cpu = 0, Thread::sched = SCHED_FIFO, Thread::priority = DEFAULT_PRIORITY;
 #endif
 
 #include <QDebug>
@@ -69,17 +65,17 @@ void Thread::run()
 		RT_TASK *rtai_task;
 		RTIME rtai_period;
 	#endif
-	rt = isBlocking ? false : Thread::isRealTime();
+	rt = isBlocking ? false : Global::isRealTime();
 
 	if ( !rt )
 	{
 #endif
-		period = Block::getPeriod( 0.0 ) * SECOND;
+		period = Global::getPeriod( 0.0 ) * SECOND;
 		isBlocking |= period == 0;
 		if ( !isBlocking )
 		{
-			counter_ov = Block::getBufferSize();
-			t1 = Functions::gettime();
+			counter_ov = Global::getBufferSize();
+			t1 = Global::gettime();
 		}
 #ifdef Q_OS_LINUX
 	}
@@ -90,14 +86,14 @@ void Thread::run()
 		if ( rt_mode != RTAI )
 		{
 #endif
-			sched_param param = { Thread::getPriority() };
-			if ( pthread_setschedparam( pthread_self(), Thread::getSched(), &param ) )
+			sched_param param = { Global::getPriority() };
+			if ( pthread_setschedparam( pthread_self(), Global::getSched(), &param ) )
 				errStr = "Nie można ustawić schedulera.";
-			if ( Thread::getCPU() )
+			if ( Global::getCPU() )
 			{
 				cpu_set_t set;
 				CPU_ZERO( &set );
-				CPU_SET( Thread::getCPU() - 1, &set );
+				CPU_SET( Global::getCPU() - 1, &set );
 				if ( pthread_setaffinity_np( pthread_self(), sizeof set, &set ) )
 				{
 					if ( !errStr.isEmpty() )
@@ -115,12 +111,12 @@ void Thread::run()
 #ifdef USE_RTAI
 		}
 #endif
-		period = SECOND / Block::getSampleRate();
-		counter_ov = Block::getSampleRate();
-		realSrateT = Functions::gettime();
-		switch ( rt_mode )
+		period = SECOND / Global::getSampleRate();
+		counter_ov = Global::getSampleRate();
+		realSrateT = Global::gettime();
+		switch ( Global::getRtMode() )
 		{
-			case NANOSLEEP:
+			case Global::NANOSLEEP:
 				t1 = realSrateT;
 				break;
 #ifdef USE_RTAI
@@ -137,7 +133,7 @@ void Thread::run()
 				rt_make_hard_real_time();
 			} break;
 #endif
-			case CLOCK_NANOSLEEP:
+			case Global::CLOCK_NANOSLEEP:
 			default:
 				clock_gettime( CLOCK_MONOTONIC, &rt_time );
 				break;
@@ -217,18 +213,18 @@ void Thread::run()
 #ifdef Q_OS_LINUX
 		if ( rt )
 		{
-			switch ( rt_mode )
+			switch ( Global::getRtMode() )
 			{
-				case NANOSLEEP:
+				case Global::NANOSLEEP:
 				{
-					qint64 t2 = Functions::gettime();
+					qint64 t2 = Global::gettime();
 					long sleep_time = period - t2 + t1;
 					if ( sleep_time > 0 )
 					{
 						timespec ts = { 0, sleep_time };
 						nanosleep( &ts, NULL );
 					}
-					t1 = Functions::gettime();
+					t1 = Global::gettime();
 					t1 -= t1 - t2 - sleep_time;
 				} break;
 #ifdef USE_RTAI
@@ -236,7 +232,7 @@ void Thread::run()
 					rt_task_wait_period();
 					break;
 #endif
-				case CLOCK_NANOSLEEP:
+				case Global::CLOCK_NANOSLEEP:
 				default:
 					clock_nanosleep( CLOCK_MONOTONIC, TIMER_ABSTIME, &rt_time, NULL );
 					rt_time.tv_nsec += period;
@@ -249,7 +245,7 @@ void Thread::run()
 			}
 			if ( ++counter == counter_ov )
 			{
-				qint64 realSrateT2 = Functions::gettime();
+				qint64 realSrateT2 = Global::gettime();
 				realSampleRate = counter_ov * ( SECOND * 10LL ) / ( realSrateT2 - realSrateT );
 				realSrateT = realSrateT2;
 				counter = 0;
@@ -259,11 +255,11 @@ void Thread::run()
 #endif
 		if ( !isBlocking && ++counter == counter_ov )
 		{
-			qint64 t2 = Functions::gettime();
+			qint64 t2 = Global::gettime();
 			qint64 sleep_time = period - t2 + t1;
 			if ( sleep_time >= 1000 )
 				usleep( sleep_time / 1000 );
-			t1 = Functions::gettime();
+			t1 = Global::gettime();
 			t1 -= t1 - t2 - sleep_time;
 			counter = 0;
 		}

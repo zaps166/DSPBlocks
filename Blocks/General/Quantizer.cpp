@@ -1,6 +1,8 @@
 #include "Quantizer.hpp"
 #include "Array.hpp"
 
+#include <math.h>
+
 static float quantize( float val, quint8 bits )
 {
 	quint32 multiplier = 1 << ( bits - 1 );

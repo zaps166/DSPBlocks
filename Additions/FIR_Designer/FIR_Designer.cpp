@@ -1,5 +1,5 @@
 #include "FIR_Designer.hpp"
-#include "Block.hpp"
+#include "Global.hpp"
 
 #include <QPlainTextEdit>
 #include <QMessageBox>
@@ -16,7 +16,7 @@ FIR_Designer::FIR_Designer( QSettings &settings ) :
 
 	ui.windFuncW->setKaiserEditEnabled( false );
 
-	ui.srateB->setValue( Block::getSampleRate() );
+	ui.srateB->setValue( Global::getSampleRate() );
 	on_srateB_editingFinished();
 	ui.cutoffB->setValue( ui.srateB->value() / 48 );
 	ui.cutF2B->setValue( ui.srateB->value() / 24 );

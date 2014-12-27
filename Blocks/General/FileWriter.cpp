@@ -1,4 +1,5 @@
 #include "FileWriter.hpp"
+#include "Global.hpp"
 
 FileWriter::FileWriter() :
 	Block( "File writer", "Zapisuje wartości próbek do pliku", 1, 0, SINK ),
@@ -137,7 +138,7 @@ void FileWriterUI::setFileName()
 }
 void FileWriterUI::browseFile()
 {
-	QString newFile = QFileDialog::getSaveFileName( this, "Wybierz plik zapisu", fileE->text(), QString(), NULL, Block::getNativeFileDialogFlag() );
+	QString newFile = QFileDialog::getSaveFileName( this, "Wybierz plik zapisu", fileE->text(), QString(), NULL, Global::getNativeFileDialogFlag() );
 	if ( !newFile.isEmpty() )
 		fileE->setText( newFile );
 }

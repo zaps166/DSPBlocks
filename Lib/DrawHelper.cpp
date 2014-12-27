@@ -1,6 +1,5 @@
 #include "DrawHelper.hpp"
-#include "Functions.hpp"
-#include "Block.hpp"
+#include "Global.hpp"
 
 void DrawThr::start()
 {
@@ -18,8 +17,8 @@ void DrawThr::stop()
 
 void DrawThr::run()
 {
-	qint64 t1 = Functions::gettime();
-	qint32 period = Block::getPeriod() * 1000000;
+	qint64 t1 = Global::gettime();
+	qint32 period = Global::getPeriod() * 1000000;
 	drawHelper.drawMutex.lock();
 	while ( !br )
 	{
@@ -27,7 +26,7 @@ void DrawThr::run()
 			drawHelper.drawCond.wait( &drawHelper.drawMutex );
 		if ( !br )
 		{
-			qint64 t2 = Functions::gettime();
+			qint64 t2 = Global::gettime();
 			if ( ( t2 - t1 ) / 1000 >= period )
 			{
 				drawHelper.draw();

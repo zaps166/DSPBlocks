@@ -29,7 +29,7 @@ void BlocksTree::addBlock( Block *block, const char *groupName )
 	item->setText( 1, block->getName() );
 	item->setToolTip( 0, block->getDescription() );
 	item->setData( 0, Qt::DecorationRole, block->createPixmap() );
-	item->setData( 0, Qt::UserRole, QVariant::fromValue( ( uintptr_t )block ) );
+	item->setData( 0, Qt::UserRole, QVariant::fromValue( ( quintptr )block ) );
 }
 
 void BlocksTree::mouseMoveEvent( QMouseEvent *event )
@@ -40,7 +40,7 @@ void BlocksTree::mouseMoveEvent( QMouseEvent *event )
 		if ( tWI && tWI->parent() && tWI->isSelected() )
 		{
 			QMimeData *mimeData = new QMimeData;
-			Block *block = ( Block * )tWI->data( 0, Qt::UserRole ).value< uintptr_t >();
+			Block *block = ( Block * )tWI->data( 0, Qt::UserRole ).value< quintptr >();
 			mimeData->setData( "Block", QByteArray( ( const char * )&block, sizeof block ) );
 
 			QDrag *drag = new QDrag( this );

@@ -3,6 +3,7 @@
 #ifdef Q_OS_LINUX
 	#include "RTSettings.hpp"
 #endif
+#include "Global.hpp"
 #include "Block.hpp"
 
 #ifdef Q_OS_LINUX
@@ -146,17 +147,17 @@ MainWindow::MainWindow( QSettings &settings, QWidget *parent ) :
 	connect( &thread, SIGNAL( finished() ), this, SLOT( threadStopped() ) );
 	connect( &scene, SIGNAL( saveState() ), this, SLOT( saveState() ) );
 
-	if ( ui.action_U_yj_natywnych_okien_dialogowych->isChecked() != settings.value( "NativeFileDialog", Block::isNativeFileDialog() ).toBool() )
+	if ( ui.action_U_yj_natywnych_okien_dialogowych->isChecked() != settings.value( "NativeFileDialog", Global::isNativeFileDialog() ).toBool() )
 		ui.action_U_yj_natywnych_okien_dialogowych->trigger();
 
 #ifdef Q_OS_LINUX
-	Thread::setRealTime
+	Global::setRealTime
 	(
-		settings.value( "RealTime/Enabled", Thread::isRealTime() ).toBool(),
-		settings.value( "RealTime/CPU", Thread::getCPU() ).toInt(),
-		settings.value( "RealTime/Sched", Thread::getSched() ).toInt(),
-		settings.value( "RealTime/Priority", Thread::getPriority() ).toInt(),
-		settings.value( "RealTime/RtMode", Thread::getRtMode() ).toInt()
+		settings.value( "RealTime/Enabled", Global::isRealTime() ).toBool(),
+		settings.value( "RealTime/CPU", Global::getCPU() ).toInt(),
+		settings.value( "RealTime/Sched", Global::getSched() ).toInt(),
+		settings.value( "RealTime/Priority", Global::getPriority() ).toInt(),
+		settings.value( "RealTime/RtMode", Global::getRtMode() ).toInt()
 	);
 	connect( &thread, SIGNAL( errorMessage( const QString & ) ), this, SLOT( errorMessage( const QString & ) ) );
 #endif
@@ -181,11 +182,11 @@ MainWindow::~MainWindow()
 #ifdef Q_OS_LINUX
 	settings.setValue( "MainWindow/ShowRealSampleRate", showRealSampleRateAction->isChecked() );
 
-	settings.setValue( "RealTime/Enabled", Thread::isRealTime() );
-	settings.setValue( "RealTime/Sched", Thread::getSched() );
-	settings.setValue( "RealTime/Priority", Thread::getPriority() );
-	settings.setValue( "RealTime/CPU", Thread::getCPU() );
-	settings.setValue( "RealTime/RtMode", Thread::getRtMode() );
+	settings.setValue( "RealTime/Enabled", Global::isRealTime() );
+	settings.setValue( "RealTime/Sched", Global::getSched() );
+	settings.setValue( "RealTime/Priority", Global::getPriority() );
+	settings.setValue( "RealTime/CPU", Global::getCPU() );
+	settings.setValue( "RealTime/RtMode", Global::getRtMode() );
 #endif
 
 	thread.stop();
@@ -233,7 +234,7 @@ void MainWindow::on_actionOtw_rz_triggered()
 {
 	if ( askToSave() )
 	{
-		QString fName = QFileDialog::getOpenFileName( this, "Wybierz plik schematu", projectFile, "Schematy (*.mblcks)", NULL, Block::getNativeFileDialogFlag() );
+		QString fName = QFileDialog::getOpenFileName( this, "Wybierz plik schematu", projectFile, "Schematy (*.mblcks)", NULL, Global::getNativeFileDialogFlag() );
 		if ( !fName.isEmpty() )
 			loadFile( fName );
 	}
@@ -247,7 +248,7 @@ void MainWindow::on_actionZapisz_triggered()
 }
 void MainWindow::on_actionZapisz_jako_triggered()
 {
-	QString fName = QFileDialog::getSaveFileName( this, "Wybierz plik schematu", projectFile.isEmpty() ? "Schemat.mblcks" : QFileInfo( projectFile ).path(), "Schematy (*.mblcks)", NULL, Block::getNativeFileDialogFlag() );
+	QString fName = QFileDialog::getSaveFileName( this, "Wybierz plik schematu", projectFile.isEmpty() ? "Schemat.mblcks" : QFileInfo( projectFile ).path(), "Schematy (*.mblcks)", NULL, Global::getNativeFileDialogFlag() );
 	if ( !fName.isEmpty() )
 	{
 		projectFile = fName;
@@ -328,9 +329,9 @@ void MainWindow::on_actionStart_triggered( bool checked )
 		else if ( !sources.isEmpty() )
 		{
 			setItemsEnabled( false );
-			qApp->setProperty( "allBlocks", QVariant::fromValue( ( uintptr_t )&allBlocks ) );
+			qApp->setProperty( "allBlocks", QVariant::fromValue( ( quintptr )&allBlocks ) );
 #ifdef Q_OS_LINUX
-			if ( Thread::isRealTime() )
+			if ( Global::isRealTime() )
 			{
 				if ( isBlocking )
 					QMessageBox::warning( this, "Tryb czasu rzeczywistego", "Używane są bloczki blokujące, tryb czasu rzeczywistego nie zostanie aktywowany." );
@@ -338,7 +339,7 @@ void MainWindow::on_actionStart_triggered( bool checked )
 					startStatusUpdates();
 			}
 #endif
-			thread.start( sources, ceil( simulationTime * Block::getSampleRate() ), isBlocking );
+			thread.start( sources, ceil( simulationTime * Global::getSampleRate() ), isBlocking );
 		}
 	}
 }
@@ -347,7 +348,7 @@ void MainWindow::on_action_Ustawienia_triggered()
 	SimSettings simSettings( this, simulationTime );
 	if ( simSettings.exec() == QDialog::Accepted )
 	{
-		Block::setSampleRateAndRefTime( simSettings.getSampleRate(), simSettings.getRefTime() );
+		Global::setSampleRateAndRefTime( simSettings.getSampleRate(), simSettings.getRefTime() );
 		simulationTime = simSettings.getSimulationTime();
 		saveState();
 	}
@@ -361,7 +362,7 @@ void MainWindow::realTimeModeSettings()
 }
 void MainWindow::on_action_U_yj_natywnych_okien_dialogowych_triggered( bool n )
 {
-	Block::setNativeFileDialog( n );
+	Global::setNativeFileDialog( n );
 	settings.setValue( "NativeFileDialog", n );
 }
 void MainWindow::showRealSampleRate()
@@ -411,7 +412,7 @@ void MainWindow::nowy()
 	projectFile.clear();
 	simulationTime = 0.0f;
 	Block::setIDCounter( 0 );
-	Block::resetSampleRateAndRefTime();
+	Global::resetSampleRateAndRefTime();
 	prepareUndoRedo();
 	ui.actionZapisz->setEnabled( false );
 }
@@ -498,7 +499,7 @@ QByteArray MainWindow::save()
 {
 	QByteArray data;
 	QDataStream ds( &data, QIODevice::WriteOnly );
-	ds << simulationTime << Block::getSampleRate() << Block::getRefTime();
+	ds << simulationTime << Global::getSampleRate() << Global::getRefTime();
 
 	QList< Block * > blocks;
 	foreach ( QGraphicsItem *item, scene.items() )
@@ -523,7 +524,7 @@ bool MainWindow::restore( const QByteArray &save )
 	quint16 maxID = 0;
 	int srate, refTime;
 	ds >> simulationTime >> srate >> refTime;
-	Block::setSampleRateAndRefTime( srate, refTime );
+	Global::setSampleRateAndRefTime( srate, refTime );
 	while ( !ds.atEnd() )
 	{
 		Block *block = NULL;
@@ -532,7 +533,7 @@ bool MainWindow::restore( const QByteArray &save )
 		foreach ( QTreeWidgetItem *item, ui.blocksW->findItems( QString(), Qt::MatchContains | Qt::MatchRecursive ) )
 			if ( !name.isEmpty() && item->text( 1 ) == name )
 			{
-				block = ( ( Block * )item->data( 0, Qt::UserRole ).value< uintptr_t >() )->createInstance();
+				block = ( ( Block * )item->data( 0, Qt::UserRole ).value< quintptr >() )->createInstance();
 				blocks.append( block );
 				ds >> block;
 				if ( block->getID() > maxID )
