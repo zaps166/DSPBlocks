@@ -123,7 +123,7 @@ void Thread::run()
 			case RTAI:
 			{
 				int cpu_allowed = Thread::getCPU() ? ( 1 << ( Thread::getCPU() - 1 ) ) : 0;
-				rtai_task = rt_task_init_schmod( nam2num( "MUSICBLOCKS" ), Thread::getPriority(), 0, 1, Thread::getSched(), cpu_allowed );
+				rtai_task = rt_task_init_schmod( NULL, Thread::getPriority(), 0, 1, Thread::getSched(), cpu_allowed );
 				if ( rt_is_hard_timer_running() )
 					stop_rt_timer();
 				rt_set_oneshot_mode();

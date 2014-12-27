@@ -13,7 +13,7 @@ int main( int argc, char *argv[] )
 #endif
 	QApplication app( argc, argv );
 	app.setQuitOnLastWindowClosed( false );
-	QSettings settings( QSettings::IniFormat, QSettings::UserScope, "MusicBlocks" );
+	QSettings settings( QSettings::IniFormat, QSettings::UserScope, "DSPBlocks" );
 	new MainWindow( settings );
 	return app.exec();
 }

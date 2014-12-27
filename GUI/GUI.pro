@@ -7,7 +7,7 @@
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TEMPLATE = app
-TARGET = MusicBlocks
+TARGET = DSPBlocks
 
 CONFIG += console
 
@@ -18,7 +18,7 @@ else:  DESTDIR = ../App/bin
 #else:  QMAKE_LIBDIR += ../App/lib
 win32: LIBS += -L../App -lwinmm
 else:  LIBS += -L../App/lib -lrt
-LIBS += -lMusicBlocks
+LIBS += -lDSPBlocks
 
 SOURCES += main.cpp MainWindow.cpp Thread.cpp BlocksTree.cpp SchemeView.cpp SimSettings.cpp
 HEADERS +=          MainWindow.hpp Thread.hpp BlocksTree.hpp SchemeView.hpp SimSettings.hpp

@@ -3,7 +3,7 @@ QT += script
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TEMPLATE = lib
-TARGET = MusicBlocks
+TARGET = DSPBlocks
 
 INCLUDEPATH += .
 DEPENDPATH  += .

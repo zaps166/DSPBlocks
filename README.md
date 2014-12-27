@@ -1,2 +1,2 @@
-MusicBlocks
+DSP Blocks
 ===========

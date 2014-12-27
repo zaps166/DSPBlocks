@@ -2,7 +2,7 @@ TEMPLATE = lib
 CONFIG += plugin
 QT += script
 
-DESTDIR = ../../App/share/MusicBlocks/blocks
+DESTDIR = ../../App/share/DSPBlocks/blocks
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -17,5 +17,5 @@ SOURCES += main.cpp Const.cpp Multiplier.cpp RandomGen.cpp Share.cpp StdOut.cpp 
 
 win32: {
 	QMAKE_LIBDIR += ../../App
-	LIBS += -lMusicBlocks
+	LIBS += -lDSPBlocks
 }

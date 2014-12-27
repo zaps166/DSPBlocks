@@ -58,7 +58,7 @@ MainWindow::MainWindow( QSettings &settings, QWidget *parent ) :
 #endif
 
 	qApp->setProperty( "MainWindow", QVariant::fromValue( ( void * )this ) );
-	qApp->setProperty( "share", qApp->applicationDirPath() + UNIX_CDUP"/share/MusicBlocks" );
+	qApp->setProperty( "share", qApp->applicationDirPath() + UNIX_CDUP"/share/DSPBlocks" );
 
 	ui.actionNowy->setIcon( QIcon::fromTheme( "document-new" ) );
 	ui.actionOtw_rz->setIcon( QIcon::fromTheme( "project-open" ) );
