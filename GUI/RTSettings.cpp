@@ -17,20 +17,11 @@ RTSettings::RTSettings( QWidget *parent ) :
 	ui.cpuB->setMaximum( QThread::idealThreadCount() );
 	ui.cpuB->setValue( Global::getCPU() );
 
-#ifndef USE_RTAI
-	ui.rtaiB->close();
-#endif
-
 	switch ( Global::getRtMode() )
 	{
 		case Global::NANOSLEEP:
 			ui.nanosleepB->setChecked( true );
 			break;
-#ifdef USE_RTAI
-		case Global::RTAI:
-			ui.rtaiB->setChecked( true );
-			break;
-#endif
 		case Global::CLOCK_NANOSLEEP:
 		default:
 			ui.clockNanosleepB->setChecked( true );
@@ -55,10 +46,6 @@ void RTSettings::accept()
 	int rt_mode = Global::CLOCK_NANOSLEEP;
 	if ( ui.nanosleepB->isChecked() )
 		rt_mode = Global::NANOSLEEP;
-#ifdef USE_RTAI
-	else if ( ui.rtaiB->isChecked() )
-		rt_mode = Thread::RTAI;
-#endif
 	Global::setRealTime( ui.groupBox->isChecked(), ui.cpuB->value(), ui.schedB->currentIndex(), ui.priorityB->value(), rt_mode );
 	QDialog::accept();
 }

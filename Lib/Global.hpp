@@ -82,9 +82,6 @@ public:
 	{
 		CLOCK_NANOSLEEP,
 		NANOSLEEP,
-#ifdef USE_RTAI
-		RTAI,
-#endif
 		RT_MODE_MAX
 	};
 

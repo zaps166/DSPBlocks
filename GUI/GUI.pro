@@ -29,9 +29,7 @@ linux*: {
 	HEADERS += RTSettings.hpp
 	FORMS   += RTSettings.ui
 
-#	DEFINES += USE_RTAI
-#	INCLUDEPATH += /usr/realtime/include
-#	LIBS += -L/usr/realtime/lib -llxrt
+#	LIBS += -Wl,@/usr/xenomai/lib/posix.wrappers -L/usr/xenomai/lib -lpthread_rt -lxenomai
 }
 
 OBJECTS_DIR = build/obj

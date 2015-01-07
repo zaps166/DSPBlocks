@@ -234,7 +234,7 @@ void MainWindow::on_actionOtw_rz_triggered()
 {
 	if ( askToSave() )
 	{
-		QString fName = QFileDialog::getOpenFileName( this, "Wybierz plik schematu", projectFile, "Schematy (*.mblcks)", NULL, Global::getNativeFileDialogFlag() );
+		QString fName = QFileDialog::getOpenFileName( this, "Wybierz plik schematu", projectFile, "Schematy (*.dblcks)", NULL, Global::getNativeFileDialogFlag() );
 		if ( !fName.isEmpty() )
 			loadFile( fName );
 	}
@@ -248,7 +248,7 @@ void MainWindow::on_actionZapisz_triggered()
 }
 void MainWindow::on_actionZapisz_jako_triggered()
 {
-	QString fName = QFileDialog::getSaveFileName( this, "Wybierz plik schematu", projectFile.isEmpty() ? "Schemat.mblcks" : QFileInfo( projectFile ).path(), "Schematy (*.mblcks)", NULL, Global::getNativeFileDialogFlag() );
+	QString fName = QFileDialog::getSaveFileName( this, "Wybierz plik schematu", projectFile.isEmpty() ? "Schemat.dblcks" : QFileInfo( projectFile ).path(), "Schematy (*.dblcks)", NULL, Global::getNativeFileDialogFlag() );
 	if ( !fName.isEmpty() )
 	{
 		projectFile = fName;

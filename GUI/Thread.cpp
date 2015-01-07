@@ -10,13 +10,9 @@
 #endif
 #ifdef Q_OS_LINUX
 	#include <sys/time.h>
-//	#include <sys/mman.h>
+	#include <sys/mman.h>
 	#include <pthread.h>
 	#include <sched.h>
-
-	#ifdef USE_RTAI
-		#include <rtai_lxrt.h>
-	#endif
 #endif
 
 #include <QDebug>
@@ -61,10 +57,6 @@ void Thread::run()
 #ifdef Q_OS_LINUX
 	qint64 realSrateT = 0;
 	timespec rt_time;
-	#ifdef USE_RTAI
-		RT_TASK *rtai_task;
-		RTIME rtai_period;
-	#endif
 	rt = isBlocking ? false : Global::isRealTime();
 
 	if ( !rt )
@@ -82,35 +74,28 @@ void Thread::run()
 	else
 	{
 		QString errStr;
-#ifdef USE_RTAI
-		if ( rt_mode != RTAI )
+		sched_param param = { Global::getPriority() };
+		if ( pthread_setschedparam( pthread_self(), Global::getSched(), &param ) )
+			errStr = "Nie można ustawić schedulera.";
+		if ( Global::getCPU() )
 		{
-#endif
-			sched_param param = { Global::getPriority() };
-			if ( pthread_setschedparam( pthread_self(), Global::getSched(), &param ) )
-				errStr = "Nie można ustawić schedulera.";
-			if ( Global::getCPU() )
+			cpu_set_t set;
+			CPU_ZERO( &set );
+			CPU_SET( Global::getCPU() - 1, &set );
+			if ( pthread_setaffinity_np( pthread_self(), sizeof set, &set ) )
 			{
-				cpu_set_t set;
-				CPU_ZERO( &set );
-				CPU_SET( Global::getCPU() - 1, &set );
-				if ( pthread_setaffinity_np( pthread_self(), sizeof set, &set ) )
-				{
-					if ( !errStr.isEmpty() )
-						errStr += '\n';
-					errStr += "Nie można ustawić CPU affinity.";
-				}
+				if ( !errStr.isEmpty() )
+					errStr += '\n';
+				errStr += "Nie można ustawić CPU affinity.";
 			}
-	//		if ( mlockall( MCL_CURRENT | MCL_FUTURE ) )
-	//			perror( "mlockall" );
-			if ( !errStr.isEmpty() )
-			{
-				errStr += "\nSprawdź uprawnienia!";
-				emit errorMessage( errStr );
-			}
-#ifdef USE_RTAI
 		}
-#endif
+//		if ( mlockall( MCL_CURRENT | MCL_FUTURE ) )
+//			perror( "mlockall" );
+		if ( !errStr.isEmpty() )
+		{
+			errStr += "\nSprawdź uprawnienia!";
+			emit errorMessage( errStr );
+		}
 		period = SECOND / Global::getSampleRate();
 		counter_ov = Global::getSampleRate();
 		realSrateT = Global::gettime();
@@ -119,20 +104,6 @@ void Thread::run()
 			case Global::NANOSLEEP:
 				t1 = realSrateT;
 				break;
-#ifdef USE_RTAI
-			case RTAI:
-			{
-				int cpu_allowed = Thread::getCPU() ? ( 1 << ( Thread::getCPU() - 1 ) ) : 0;
-				rtai_task = rt_task_init_schmod( NULL, Thread::getPriority(), 0, 1, Thread::getSched(), cpu_allowed );
-				if ( rt_is_hard_timer_running() )
-					stop_rt_timer();
-				rt_set_oneshot_mode();
-				rtai_period = nano2count( period );
-				start_rt_timer( 0 );
-				rt_task_make_periodic( rtai_task, rt_get_time() + rtai_period, rtai_period );
-				rt_make_hard_real_time();
-			} break;
-#endif
 			case Global::CLOCK_NANOSLEEP:
 			default:
 				clock_gettime( CLOCK_MONOTONIC, &rt_time );
@@ -227,11 +198,6 @@ void Thread::run()
 					t1 = Global::gettime();
 					t1 -= t1 - t2 - sleep_time;
 				} break;
-#ifdef USE_RTAI
-				case RTAI:
-					rt_task_wait_period();
-					break;
-#endif
 				case Global::CLOCK_NANOSLEEP:
 				default:
 					clock_nanosleep( CLOCK_MONOTONIC, TIMER_ABSTIME, &rt_time, NULL );
@@ -268,15 +234,6 @@ void Thread::run()
 //		putchar( 10 );
 //		fflush( stdout );
 	}
-
-#ifdef USE_RTAI
-	if ( rt_mode == RTAI )
-	{
-		rt_make_soft_real_time();
-		rt_task_delete( rtai_task );
-		stop_rt_timer();
-	}
-#endif
 
 	sources.clear();
 }
