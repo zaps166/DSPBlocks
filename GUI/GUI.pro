@@ -20,8 +20,8 @@ win32: LIBS += -L../App -lwinmm
 else:  LIBS += -L../App/lib -lrt
 LIBS += -lDSPBlocks
 
-SOURCES += main.cpp MainWindow.cpp Thread.cpp BlocksTree.cpp SchemeView.cpp SimSettings.cpp
-HEADERS +=          MainWindow.hpp Thread.hpp BlocksTree.hpp SchemeView.hpp SimSettings.hpp
+SOURCES += main.cpp MainWindow.cpp BlocksTree.cpp SchemeView.cpp SimSettings.cpp
+HEADERS +=          MainWindow.hpp BlocksTree.hpp SchemeView.hpp SimSettings.hpp
 FORMS   +=          MainWindow.ui                                           SimSettings.ui
 
 linux*: {
