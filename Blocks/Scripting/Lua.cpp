@@ -96,9 +96,9 @@ bool Lua::compile( QString *errorStr )
 
 	const QString code =
 		"local SampleRate = " + QString::number( Global::getSampleRate() ) + "\n"
+		"local Out = {" + generateOutArray() + "}\n"
 		+ code1 + "\n" +
 		"function exec( In )\n"
-			"local Out = {" + generateOutArray() + "}\n"
 			+ code2 + "\n" +
 			"return Out\n"
 		"end";

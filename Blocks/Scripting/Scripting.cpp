@@ -1,5 +1,7 @@
 #include "Scripting.hpp"
 
+#include <QDebug>
+
 void Scripting::serialize( QDataStream &ds ) const
 {
 	ds << label << code1 << code2;
@@ -39,24 +41,22 @@ QString Scripting::generateOutArray() const
 
 ScriptingUI::ScriptingUI( Scripting &block, const QString &version ) :
 	AdditionalSettings( block ),
+	version( version.isEmpty() ? QString() : ", " + version ),
 	block( block )
 {
-	labelE = new QLineEdit;
-	labelE->setPlaceholderText( block.getName() );
-
 	code1E = new QPlainTextEdit;
 	code1E->setTabStopWidth( 20 );
 	code1E->setFont( QFont( "Monospace" ) );
 	code1E->setLineWrapMode( QPlainTextEdit::NoWrap );
-	code1E->setWhatsThis( "Globalne zmienne i funkcje. Zawiera zmienne:\n  - SampleRate" );
+	code1E->setWhatsThis( "Globalne zmienne i funkcje. Zawiera:\n  - zmienna \"SampleRate\"\n  - tablica \"Out\"" );
 
 	code2E = new QPlainTextEdit;
 	code2E->setTabStopWidth( 20 );
 	code2E->setFont( QFont( "Monospace" ) );
 	code2E->setLineWrapMode( QPlainTextEdit::NoWrap );
-	code2E->setWhatsThis( "Główna funkcja. Zawiera tablice:\n  - In,\n  - Out\nZwraca Out." );
+	code2E->setWhatsThis( "Główna funkcja. Zawiera:\n  - tablica \"In\"\nZwraca \"Out\"." );
 
-	applyB = new QPushButton( "&Zastosuj" );
+	applyB = new QPushButton( "Zastosuj" );
 	applyB->setShortcut( QKeySequence( "Ctrl+S" ) );
 
 	splitter = new QSplitter( Qt::Vertical );
@@ -64,14 +64,22 @@ ScriptingUI::ScriptingUI( Scripting &block, const QString &version ) :
 	splitter->addWidget( code2E );
 	splitter->setSizes( QList< int >() << 1 << height() );
 
+	labelE = new QLineEdit;
+	labelE->setWhatsThis( "Nazwa" );
+	labelE->setPlaceholderText( block.getName() );
+
+	infoL = new QLabel;
+	infoL->setTextFormat( Qt::PlainText );
+
 	QGridLayout *layout = new QGridLayout( this );
-	layout->addWidget( splitter, 0, 0, 1, 3 );
-	layout->addWidget( labelE, 1, 0, 1, 1 );
-	layout->addWidget( applyB, 1, 1, 1, version.isEmpty() ? 2 : 1 );
-	if ( !version.isEmpty() )
-		layout->addWidget( new QLabel( version ), 1, 2, 1, 1 );
+	layout->addWidget( splitter, 0, 0, 1, 2 );
+	layout->addWidget( infoL, 1, 0, 1, 1 );
+	layout->addWidget( labelE, 2, 0, 1, 1 );
+	layout->addWidget( applyB, 2, 1, 1, 1 );
 	layout->setMargin( 3 );
 
+	connect( code1E, SIGNAL( cursorPositionChanged() ), this, SLOT( updateCurrentLine() ) );
+	connect( code2E, SIGNAL( cursorPositionChanged() ), this, SLOT( updateCurrentLine() ) );
 	connect( applyB, SIGNAL( clicked() ), this, SLOT( apply() ) );
 }
 
@@ -149,6 +157,18 @@ void ScriptingUI::apply()
 
 		if ( !errorStr.isEmpty() )
 			QMessageBox::critical( this, block.getName(), errorStr );
+	}
+}
+void ScriptingUI::updateCurrentLine()
+{
+	if ( QPlainTextEdit *textE = qobject_cast< QPlainTextEdit * >( sender() ) )
+	{
+		int add = 1;
+		if ( textE == code2E )
+			add += code1E->blockCount() + 3; //3 linie standardowego kodu
+		const QString txt = "Linia: " + QString::number( textE->textCursor().blockNumber() + add ) + version;
+		if ( txt != infoL->text() )
+			infoL->setText( txt );
 	}
 }
 

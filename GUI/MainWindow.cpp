@@ -57,7 +57,6 @@ MainWindow::MainWindow( QSettings &settings, QWidget *parent ) :
 	lastRealSampleRate = -1;
 #endif
 
-	qApp->setProperty( "MainWindow", ( quintptr )this );
 	qApp->setProperty( "share", qApp->applicationDirPath() + UNIX_CDUP"/share/DSPBlocks" );
 
 	ui.actionNowy->setIcon( QIcon::fromTheme( "document-new" ) );

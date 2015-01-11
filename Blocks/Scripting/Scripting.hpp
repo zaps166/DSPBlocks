@@ -34,6 +34,7 @@ class QPlainTextEdit;
 class QPushButton;
 class QLineEdit;
 class QSplitter;
+class QLabel;
 
 class ScriptingUI : public AdditionalSettings
 {
@@ -48,16 +49,17 @@ public:
 	void deSerialize( QDataStream &ds );
 private slots:
 	void apply();
+	void updateCurrentLine();
 private:
 	void setTitle();
 
-	QString initialWinTitle;
+	QString initialWinTitle, version;
 	QPoint winPos;
 
-	QLineEdit *labelE;
-
 	QPlainTextEdit *code1E, *code2E;
+	QLineEdit *labelE;
 	QPushButton *applyB;
+	QLabel *infoL;
 
 	QSplitter *splitter;
 

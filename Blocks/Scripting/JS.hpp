@@ -19,7 +19,7 @@ public:
 private:
 	bool compile( QString *errorStr = NULL );
 
-	QScriptValue mainFunc, buffer;
+	QScriptValue execFunc, buffer;
 	QScriptEngine scriptE;
 	bool err;
 };

@@ -29,7 +29,7 @@ void JS::exec( Array< Sample > &samples )
 	mutex.lock();
 	if ( !err )
 	{
-		Out = mainFunc.call( buffer ).toVariant().toList();
+		Out = execFunc.call( buffer ).toVariant().toList();
 		if ( Out.count() != 2 )
 		{
 			if ( scriptE.hasUncaughtException() )
@@ -61,24 +61,24 @@ bool JS::compile( QString *errorStr )
 {
 	scriptE.evaluate
 	(
-		"var SampleRate = " + QString::number( Global::getSampleRate() ) + ";"
+		"var SampleRate = " + QString::number( Global::getSampleRate() ) + "\n"
+		"var Out = [ " + generateOutArray() + " ]\n"
 		+ code1 + "\n" +
-		"function main() {"
-			"var In = this;"
-			"var Out = [ " + generateOutArray() + " ];"
+		"function exec() {\n"
+			"var In = this\n"
 			+ code2 + "\n" +
-			"return Out;"
+			"return Out\n"
 		"}"
 	);
 	if ( scriptE.hasUncaughtException() )
 	{
 		if ( errorStr )
 			*errorStr = scriptE.uncaughtException().toString();
-		mainFunc = QScriptValue();
+		execFunc = QScriptValue();
 		err = true;
 		return false;
 	}
-	mainFunc = scriptE.globalObject().property( "main" );
+	execFunc = scriptE.globalObject().property( "exec" );
 	err = false;
 	return true;
 }

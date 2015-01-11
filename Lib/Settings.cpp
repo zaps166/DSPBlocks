@@ -48,7 +48,6 @@ Settings::Settings( Block &block, bool canModifyInputs, quint8 inputsMin, quint8
 	block( block ),
 	additionalSettings( additionalSettings )
 {
-	setParent( ( QWidget * )qApp->property( "MainWindow" ).value< quintptr >() );
 	setWindowTitle( "Ustawienia \"" + block.getName() + '"' );
 	setWindowFlags( Qt::Dialog );
 
