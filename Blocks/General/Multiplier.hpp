@@ -15,7 +15,7 @@ public:
 
 	Block *createInstance();
 private:
-	QVector< float > buffer;
+	QScopedArrayPointer< float > buffer;
 };
 
 #endif // MULTIPLIER_HPP

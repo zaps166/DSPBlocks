@@ -17,7 +17,7 @@ bool PortAudioIn::start()
 		err = false;
 		settings->setRunMode( true );
 		outBufferSize = outBufferPos = 0;
-		outBuffer.resize( samplesToRead * outputsCount() );
+		outBuffer.reset( new float[ samplesToRead * outputsCount() ]() );
 		Pa_StartStream( stream );
 		return true;
 	}
@@ -60,6 +60,7 @@ void PortAudioIn::stop()
 		Pa_AbortStream( stream );
 		Pa_CloseStream( stream );
 		stream = NULL;
+		outBuffer.reset();
 		settings->setRunMode( false );
 	}
 }

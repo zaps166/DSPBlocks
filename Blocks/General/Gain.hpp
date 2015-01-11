@@ -21,7 +21,7 @@ private:
 
 	void setLabel();
 
-	QVector< float > buffer;
+	QScopedArrayPointer< float > buffer;
 	float gain;
 };
 

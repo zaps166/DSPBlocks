@@ -17,8 +17,7 @@ public:
 	Block *createInstance();
 private:
 	int samplesToWrite;
-	QVector< float > buffer;
-	Array< float > inBuffer;
+	Array< float > buffer, outBuffer;
 };
 
 #endif // PORTAUDIOOUT_HPP

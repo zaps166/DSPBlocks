@@ -21,7 +21,7 @@ bool AtLPT_Out::start()
 	if ( openDevice() )
 	{
 		settings->setRunMode( true );
-		buffer.resize( inputsCount() );
+		buffer.reset( new qint16[ inputsCount() ]() );
 		return true;
 	}
 	return false;
@@ -44,7 +44,7 @@ void AtLPT_Out::exec( Array< Sample > & )
 void AtLPT_Out::stop()
 {
 	closeDevice();
-	buffer.clear();
+	buffer.reset();
 	settings->setRunMode( false );
 }
 

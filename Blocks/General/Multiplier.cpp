@@ -9,7 +9,7 @@ Multiplier::Multiplier() :
 bool Multiplier::start()
 {
 	settings->setRunMode( true );
-	buffer.resize( inputsCount() );
+	buffer.reset( new float[ inputsCount() ]() );
 	return true;
 }
 void Multiplier::setSample( int input, float sample )
@@ -26,7 +26,7 @@ void Multiplier::exec( Array< Sample > &samples )
 void Multiplier::stop()
 {
 	settings->setRunMode( false );
-	buffer.clear();
+	buffer.reset();
 }
 
 Block *Multiplier::createInstance()

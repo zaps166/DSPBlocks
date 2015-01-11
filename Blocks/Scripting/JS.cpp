@@ -6,34 +6,35 @@
 
 JS::JS() :
 	Block( "JavaScript", "Wprowadzanie kodu w języku JavaScript", 1, 1, PROCESSING ),
-	code2( "output_samples = input_samples.slice();" )
+	code2( "Out = In.slice();" )
 {}
 
 bool JS::start()
 {
 	settings->setRunMode( true );
 
-	input_samples = scriptE.newArray( inputsCount() );
+	buffer = scriptE.newArray( inputsCount() );
 	for ( int i = 0 ; i < inputsCount() ; ++i )
-		input_samples.setProperty( i, 0.0f );
+		buffer.setProperty( i, 0.0f );
 
 	return compile( false );
 }
 void JS::setSample( int input, float sample )
 {
-	input_samples.setProperty( input, sample );
+	buffer.setProperty( input, sample );
 }
 void JS::exec( Array< Sample > &samples )
 {
 	mutex.lock();
-	QVariantList output_samples = mainFunc.call( input_samples ).toVariant().toList();
+	QVariantList Out = mainFunc.call( buffer ).toVariant().toList();
 	mutex.unlock();
 	for ( int i = 0 ; i < outputsCount() ; ++i )
-		samples += ( Sample ){ getTarget( i ), ( output_samples.count() > i ? output_samples[ i ].toFloat() : 0.0f ) };
+		samples += ( Sample ){ getTarget( i ), ( Out.count() > i ? Out[ i ].toFloat() : 0.0f ) };
 }
 void JS::stop()
 {
 	settings->setRunMode( false );
+	buffer = QScriptValue();
 }
 
 Block *JS::createInstance()
@@ -59,15 +60,15 @@ bool JS::compile( bool showErr )
 {
 	scriptE.evaluate
 	(
-		"var sample_rate = " + QString::number( Global::getSampleRate() ) + ";"
-		"var inputs_count = " + QString::number( inputsCount() ) + ";"
-		"var outputs_count = " + QString::number( outputsCount() ) + ";"
+		"var SampleRate = " + QString::number( Global::getSampleRate() ) + ";"
+		"var InCnt = " + QString::number( inputsCount() ) + ";"
+		"var OutCnt = " + QString::number( outputsCount() ) + ";"
 		+ code1 +
 		"function main() {"
-			"var input_samples = this;"
-			"var output_samples = new Array( outputs_count );"
+			"var In = this;"
+			"var Out = new Array( OutCnt );"
 			+ code2 +
-			"return output_samples;"
+			"return Out;"
 		"}"
 	);
 	if ( scriptE.hasUncaughtException() )
@@ -106,11 +107,11 @@ JS_UI::JS_UI( JS &block ) :
 
 	code1E = new QPlainTextEdit;
 	code1E->setFont( QFont( "Monospace" ) );
-	code1E->setWhatsThis( "Globalne zmienne i funkcje. Zawiera:\n  - sample_rate,\n  - inputs_count,\n  - outputs_count" );
+	code1E->setWhatsThis( "Globalne zmienne i funkcje. Zawiera:\n  - SampleRate,\n  - InCnt,\n  - OutCnt" );
 
 	code2E = new QPlainTextEdit;
 	code2E->setFont( QFont( "Monospace" ) );
-	code2E->setWhatsThis( "Główna funkcja. Zawiera tablice:\n  - input_samples,\n  - output_samples\nZwraca output_samples." );
+	code2E->setWhatsThis( "Główna funkcja. Zawiera tablice:\n  - In,\n  - Out\nZwraca Out." );
 
 	applyB = new QPushButton( "&Zastosuj" );
 	applyB->setShortcut( QKeySequence( "Ctrl+S" ) );

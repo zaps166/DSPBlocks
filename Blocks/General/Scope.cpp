@@ -220,7 +220,7 @@ void Scope::paintEvent( QPaintEvent * )
 				}
 			}
 			p.setPen( QPen( QColor( 102, 179, 102 ), 0.0 ) );
-			p.drawPath( paths[ i ] );
+			p.drawPath( paths.at( i ) );
 			p.translate( 0.0, 2.0 );
 		}
 	}

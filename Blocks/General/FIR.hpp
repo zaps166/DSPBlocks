@@ -24,8 +24,9 @@ private:
 
 	void setInputBuffer();
 
-	RingBuffer< float > *inputBuffer;
-	QVector< float > fir_coeff, inputSamples;
+	QScopedArrayPointer< RingBuffer< float > >inputBuffer;
+	QScopedArrayPointer< float > inputSamples;
+	QVector< float > fir_coeff;
 	QMutex mutex;
 };
 

@@ -24,10 +24,10 @@ private:
 
 	void setInputBuffer();
 
-	RingBuffer< float > *inputBuffer;
-	RingBuffer< double > *outputBuffer;
+	QScopedArrayPointer< float > inputSamples;
+	QScopedArrayPointer< RingBuffer< double > > outputBuffer;
+	QScopedArrayPointer< RingBuffer< float > > inputBuffer;
 	QVector< double > Acoeff, Bcoeff;
-	QVector< float > inputSamples;
 	QMutex mutex;
 };
 

@@ -171,8 +171,11 @@ void Spectrum::draw()
 			}
 	}
 	else for ( int i = 0 ; i < inputsCount() ; ++i )
+	{
+		float *spectrumData = spectrum[ i ].data();
 		for ( int j = 0 ; j < spectrumSize ; ++j )
-			spectrum[ i ][ j ] = sqrt( fftCplxOut[ i ][ j ].re * fftCplxOut[ i ][ j ].re + fftCplxOut[ i ][ j ].im * fftCplxOut[ i ][ j ].im ) * spectrumScale / spectrumSize;
+			spectrumData[ j ] = sqrt( fftCplxOut[ i ][ j ].re * fftCplxOut[ i ][ j ].re + fftCplxOut[ i ][ j ].im * fftCplxOut[ i ][ j ].im ) * spectrumScale / spectrumSize;
+	}
 	paintMutex.unlock();
 
 	QWidget::update();
@@ -194,7 +197,7 @@ void Spectrum::paintEvent( QPaintEvent * )
 			for ( int j = 0 ; j < spectrumSize ; ++j )
 			{
 				const qreal x = ( qreal )j / spectrumSize;
-				p.fillRect( QRectF( x, 1.0 - spectrum[ i ][ j ], rectS, spectrum[ i ][ j ] ), linearGrad );
+				p.fillRect( QRectF( x, 1.0 - spectrum.at( i ).at( j ), rectS, spectrum.at( i ).at( j ) ), linearGrad );
 			}
 			p.translate( 0.0, 1.0 );
 		}

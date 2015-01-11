@@ -2,8 +2,7 @@
 #include "Array.hpp"
 
 IIR::IIR() :
-	Block( "IIR", "Filtr o nieskończonej odpowiedzi impulsowej", 1, 1, PROCESSING ),
-	inputBuffer( NULL ), outputBuffer( NULL )
+	Block( "IIR", "Filtr o nieskończonej odpowiedzi impulsowej", 1, 1, PROCESSING )
 {}
 
 bool IIR::start()
@@ -11,9 +10,9 @@ bool IIR::start()
 	if ( inputsCount() != outputsCount() )
 		return false;
 	settings->setRunMode( true );
-	inputBuffer = new RingBuffer< float >[ inputsCount() ];
-	outputBuffer = new RingBuffer< double >[ inputsCount() ];
-	inputSamples.resize( inputsCount() );
+	inputBuffer.reset( new RingBuffer< float >[ inputsCount() ] );
+	outputBuffer.reset( new RingBuffer< double >[ inputsCount() ] );
+	inputSamples.reset( new float[ inputsCount() ]() );
 	setInputBuffer();
 	return true;
 }
@@ -24,8 +23,8 @@ void IIR::setSample( int input, float sample )
 void IIR::exec( Array< Sample > &samples )
 {
 	mutex.lock();
-	const double *ACoeff_data = Acoeff.data();
-	const double *BCoeff_data = Bcoeff.data();
+	const double *ACoeff_data = Acoeff.constData();
+	const double *BCoeff_data = Bcoeff.constData();
 	for ( int i = 0 ; i < outputsCount() ; ++i )
 	{
 		double sum = 0.0;
@@ -42,11 +41,9 @@ void IIR::exec( Array< Sample > &samples )
 void IIR::stop()
 {
 	settings->setRunMode( false );
-	delete[] inputBuffer;
-	delete[] outputBuffer;
-	inputBuffer = NULL;
-	outputBuffer = NULL;
-	inputSamples.clear();
+	inputBuffer.reset();
+	outputBuffer.reset();
+	inputSamples.reset();
 }
 
 Block *IIR::createInstance()

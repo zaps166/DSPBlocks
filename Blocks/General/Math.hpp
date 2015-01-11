@@ -25,7 +25,7 @@ private:
 	typedef double ( *MathFunc )( double );
 	MathFunc math_func;
 
-	QVector< float > output;
+	QScopedArrayPointer< float > buffer;
 	quint8 opcode;
 };
 

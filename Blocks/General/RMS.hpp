@@ -25,8 +25,8 @@ private:
 	void calcNumSamples();
 
 	int ms, numSamples;
-	QVector< double > partial_result;
-	QVector< float > result;
+	QScopedArrayPointer< double > partial_result;
+	QScopedArrayPointer< float > result;
 	QAtomicInt pos;
 	quint8 mode;
 };

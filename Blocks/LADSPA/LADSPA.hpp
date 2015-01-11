@@ -2,6 +2,7 @@
 #define LADSPA_HPP
 
 #include "Block.hpp"
+#include "Array.hpp"
 
 class QLibrary;
 
@@ -26,7 +27,7 @@ private:
 	int pos;
 	bool multiinstances;
 	const LADSPA_Descriptor &ld;
-	QVector< QVector< LADSPA_Data > > buffer;
+	QScopedArrayPointer< QScopedArrayPointer< LADSPA_Data > > buffer;
 	QVector< LADSPA_Handle > ladspa_instances;
 };
 

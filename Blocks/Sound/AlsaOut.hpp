@@ -17,8 +17,7 @@ public:
 	Block *createInstance();
 private:
 	int samplesToWrite;
-	QVector< qint32 > buffer;
-	Array< qint32 > inBuffer;
+	Array< qint32 > buffer, inBuffer;
 };
 
 #endif // ALSAOUT_HPP

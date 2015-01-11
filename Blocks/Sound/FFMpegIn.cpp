@@ -49,7 +49,7 @@ bool FFMpegDec::start()
 			av_opt_set_int( swr, "linear_interp", true, 0 );
 			if ( !swr_init( swr ) )
 			{
-				dynamic_cast< FFMpegInUI * >( block.settings->getAdditionalSettings() )->setMaxTime( ( duration = fmtCtx->duration / AV_TIME_BASE ) );
+				reinterpret_cast< FFMpegInUI * >( block.settings->getAdditionalSettings() )->setMaxTime( ( duration = fmtCtx->duration / AV_TIME_BASE ) );
 				QThread::start();
 				return true;
 			}
@@ -157,7 +157,7 @@ void FFMpegDec::run()
 						if ( currentTime - lastTime >= 1.0 )
 						{
 							lastTime = ( int )currentTime;
-							emit dynamic_cast< FFMpegInUI * >( block.settings->getAdditionalSettings() )->setTime( lastTime );
+							emit reinterpret_cast< FFMpegInUI * >( block.settings->getAdditionalSettings() )->setTime( lastTime );
 						}
 					}
 					pkt_tmp.data += bread;

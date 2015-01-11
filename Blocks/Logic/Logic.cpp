@@ -12,7 +12,7 @@ bool Logic::start()
 {
 	settings->setRunMode( true );
 	if ( logicType != VALUE )
-		buffer.resize( inputsCount() );
+		buffer.reset( new bool[ inputsCount() ]() );
 	return true;
 }
 void Logic::setSample( int input, float sample )
@@ -70,7 +70,7 @@ void Logic::stop()
 {
 	settings->setRunMode( false );
 	if ( logicType != VALUE )
-		buffer.clear();
+		buffer.reset();
 }
 
 Block *Logic::createInstance()

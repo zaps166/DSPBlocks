@@ -25,7 +25,7 @@ private:
 	void setDelayedSamples();
 	void setLabel();
 
-	RingBuffer< float > *delayedSamples;
+	QScopedArrayPointer< RingBuffer< float > > delayedSamples;
 	QMutex mutex;
 	int delay;
 };

@@ -9,7 +9,7 @@ Summation::Summation() :
 bool Summation::start()
 {
 	settings->setRunMode( true );
-	buffer.resize( inputsCount() );
+	buffer.reset( new float[ inputsCount() ]() );
 	return true;
 }
 void Summation::setSample( int input, float sample )
@@ -26,7 +26,7 @@ void Summation::exec( Array< Sample > &samples )
 void Summation::stop()
 {
 	settings->setRunMode( false );
-	buffer.clear();
+	buffer.reset();
 }
 
 Block *Summation::createInstance()

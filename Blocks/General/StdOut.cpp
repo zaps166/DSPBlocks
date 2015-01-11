@@ -20,21 +20,21 @@ void StdOut::setSample( int input, float sample )
 }
 void StdOut::exec( Array< Sample > & )
 {
-	if ( lastBuffer.count() != buffer.count() || memcmp( lastBuffer.data(), buffer.data(), buffer.count() * sizeof( float ) ) )
+	if ( lastBuffer.count() != buffer.count() || memcmp( lastBuffer.data(), buffer.constData(), buffer.count() * sizeof( float ) ) )
 	{
 		bool o = false;
 		for ( int i = 0 ; i < inputsCount() ; ++i )
 		{
-			if ( buffer[ i ] != buffer[ i ] ) //NaN
+			if ( buffer.at( i ) != buffer.at( i ) ) //NaN
 				continue;
 			if ( i )
 				putchar( ' ' );
-			if ( boolean && buffer[ i ] == 0.0f )
+			if ( boolean && buffer.at( i ) == 0.0f )
 				printf( "       LO" );
-			else if ( boolean && buffer[ i ] == 1.0f )
+			else if ( boolean && buffer.at( i ) == 1.0f )
 				printf( "       HI" );
 			else
-				printf( "%9.5f", buffer[ i ] );
+				printf( "%9.5f", buffer.at( i ) );
 			o = true;
 		}
 		if ( o )

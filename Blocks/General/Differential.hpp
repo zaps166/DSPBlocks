@@ -15,7 +15,7 @@ public:
 
 	Block *createInstance();
 private:
-	QVector< float > buffer[ 2 ];
+	QScopedArrayPointer< float > buffer[ 2 ];
 };
 
 #endif // DIFFERENTIAL_HPP

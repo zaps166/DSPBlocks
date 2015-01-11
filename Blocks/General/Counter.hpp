@@ -24,8 +24,8 @@ private:
 
 	void setLabel();
 
-	QVector< bool > lastState, currState;
-	QVector< qint32 > cnt;
+	QScopedArrayPointer< bool > lastState, currState;
+	QScopedArrayPointer< qint32 > cnt;
 
 	quint8 slope, mode;
 	qint32 cnt_val;

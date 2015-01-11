@@ -13,8 +13,8 @@ bool PortAudioOut::start()
 	{
 		err = false;
 		settings->setRunMode( true );
-		buffer.resize( inputsCount() );
-		inBuffer.alloc( samplesToWrite * inputsCount() );
+		buffer.alloc( inputsCount(), true );
+		outBuffer.alloc( samplesToWrite * inputsCount() );
 		Pa_StartStream( stream );
 		return true;
 	}
@@ -28,17 +28,17 @@ void PortAudioOut::exec( Array< Sample > & )
 {
 	if ( err )
 		return;
-	inBuffer += buffer;
-	if ( inBuffer.count() == samplesToWrite * inputsCount() )
+	outBuffer += buffer;
+	if ( outBuffer.count() == samplesToWrite * inputsCount() )
 	{
-		PaError err = Pa_WriteStream( stream, inBuffer.data(), samplesToWrite );
+		PaError err = Pa_WriteStream( stream, outBuffer.data(), samplesToWrite );
 		if ( err != paOutputUnderflowed ) //ok?
 			err = true;
 		else
 		{
 			//obsługa
 		}
-		inBuffer.clear();
+		outBuffer.clear();
 	}
 }
 void PortAudioOut::stop()
@@ -48,7 +48,8 @@ void PortAudioOut::stop()
 		Pa_AbortStream( stream );
 		Pa_CloseStream( stream );
 		stream = NULL;
-		inBuffer.free();
+		outBuffer.free();
+		buffer.free();
 		settings->setRunMode( false );
 	}
 }

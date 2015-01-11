@@ -36,11 +36,11 @@ public:
 		c = s = 0;
 	}
 
-	inline void alloc( int size )
+	inline void alloc( int size, bool setSize = false )
 	{
 		::free( d );
 		d = ( T * )calloc( ( c = size ), sizeof( T ) );
-		s = 0;
+		s = setSize ? size : 0;
 	}
 
 	inline void operator =( const QVector< T > &v )
@@ -57,20 +57,28 @@ public:
 			d = ( T * )realloc( d, ++c * sizeof( T ) );
 		d[ s++ ] = t;
 	}
-	inline void operator +=( const QVector< T > &v )
+	inline void operator +=( const Array< T > &other )
 	{
-		if ( c < s + v.count() )
-			d = ( T * )realloc( d, ( c = s + v.count() ) * sizeof( T ) );
-		memcpy( d + s, v.data(), v.count() * sizeof( T ) );
-		s += v.count();
+		if ( c < s + other.count() )
+			d = ( T * )realloc( d, ( c = s + other.count() ) * sizeof( T ) );
+		memcpy( d + s, other.data(), other.count() * sizeof( T ) );
+		s += other.count();
 	}
 
 	inline const T *data() const
 	{
 		return d;
 	}
+	inline T *data()
+	{
+		return d;
+	}
 
 	inline const T &operator []( int idx ) const
+	{
+		return d[ idx ];
+	}
+	inline T &operator []( int idx )
 	{
 		return d[ idx ];
 	}

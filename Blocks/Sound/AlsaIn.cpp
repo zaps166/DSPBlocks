@@ -13,7 +13,7 @@ bool AlsaIn::start()
 	{
 		settings->setRunMode( true );
 		outBufferSize = outBufferPos = 0;
-		outBuffer.resize( samplesToRead * outputsCount() );
+		outBuffer.reset( new qint32[ samplesToRead * outputsCount() ]() );
 		err = false;
 		return true;
 	}
@@ -62,7 +62,7 @@ void AlsaIn::stop()
 		snd_pcm_drop( snd );
 		snd_pcm_close( snd );
 		snd = NULL;
-		outBuffer.clear();
+		outBuffer.reset();
 		settings->setRunMode( false );
 	}
 }

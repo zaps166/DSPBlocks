@@ -15,7 +15,7 @@ public:
 	Block *createInstance();
 private:
 	int samplesToRead;
-	QVector< qint32 > outBuffer;
+	QScopedArrayPointer< qint32 > outBuffer;
 	int outBufferPos, outBufferSize;
 };
 

@@ -11,7 +11,7 @@ bool Differential::start()
 	if ( inputsCount() != outputsCount() )
 		return false;
 	for ( int i = 0 ; i < 2 ; ++i )
-		buffer[ i ].resize( inputsCount() );
+		buffer[ i ].reset( new float[ inputsCount() ]() );
 	settings->setRunMode( true );
 	return true;
 }
@@ -31,7 +31,7 @@ void Differential::stop()
 {
 	settings->setRunMode( false );
 	for ( int i = 0 ; i < 2 ; ++i )
-		buffer[ i ].clear();
+		buffer[ i ].reset();
 }
 
 Block *Differential::createInstance()

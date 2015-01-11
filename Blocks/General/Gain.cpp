@@ -11,7 +11,7 @@ bool Gain::start()
 	if ( inputsCount() != outputsCount() )
 		return false;
 	settings->setRunMode( true );
-	buffer.resize( inputsCount() );
+	buffer.reset( new float[ inputsCount() ]() );
 	return true;
 }
 void Gain::setSample( int input, float sample )
@@ -26,7 +26,7 @@ void Gain::exec( Array< Sample > &samples )
 void Gain::stop()
 {
 	settings->setRunMode( false );
-	buffer.clear();
+	buffer.reset();
 }
 
 Block *Gain::createInstance()

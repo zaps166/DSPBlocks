@@ -19,7 +19,7 @@ private:
 	void serialize( QDataStream &ds ) const;
 	void deSerialize( QDataStream &ds );
 
-	QVector< float > buffer;
+	QScopedArrayPointer< float > buffer;
 	bool oddChSign;
 };
 

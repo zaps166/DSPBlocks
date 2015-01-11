@@ -29,7 +29,7 @@ private:
 	QByteArray label, code1, code2;
 
 	QScriptEngine scriptE;
-	QScriptValue mainFunc, input_samples;
+	QScriptValue mainFunc, buffer;
 
 	QMutex mutex;
 };

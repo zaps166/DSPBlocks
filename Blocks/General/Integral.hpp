@@ -15,7 +15,7 @@ public:
 
 	Block *createInstance();
 private:
-	QVector< float > buffer[ 3 ];
+	QScopedArrayPointer< float > buffer[ 3 ];
 };
 
 #endif // INTEGRAL_HPP

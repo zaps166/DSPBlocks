@@ -23,25 +23,25 @@ bool Math::start()
 {
 	if ( inputsCount() != outputsCount() )
 		return false;
-	output.fill( 0.0f, inputsCount() );
+	buffer.reset( new float[ inputsCount() ]() );
 	settings->setRunMode( true );
 	setOperation();
 	return true;
 }
 void Math::setSample( int input, float sample )
 {
-	output[ input ] = sample;
+	buffer[ input ] = sample;
 }
 void Math::exec( Array< Sample > &samples )
 {
 	MathFunc _math_func = math_func;
 	for ( int i = 0 ; i < outputsCount() ; ++i )
-		samples += ( Sample ){ getTarget( i ), ( float )_math_func( output[ i ] ) };
+		samples += ( Sample ){ getTarget( i ), ( float )_math_func( buffer[ i ] ) };
 }
 void Math::stop()
 {
 	settings->setRunMode( false );
-	output.clear();
+	buffer.reset();
 }
 
 Block *Math::createInstance()

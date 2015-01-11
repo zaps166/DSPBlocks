@@ -2,8 +2,7 @@
 #include "Array.hpp"
 
 FIR::FIR() :
-	Block( "FIR", "Filtr o skończonej odpowiedzi impulsowej", 1, 1, PROCESSING ),
-	inputBuffer( NULL )
+	Block( "FIR", "Filtr o skończonej odpowiedzi impulsowej", 1, 1, PROCESSING )
 {}
 
 bool FIR::start()
@@ -11,8 +10,8 @@ bool FIR::start()
 	if ( inputsCount() != outputsCount() )
 		return false;
 	settings->setRunMode( true );
-	inputBuffer = new RingBuffer< float >[ inputsCount() ];
-	inputSamples.resize( inputsCount() );
+	inputBuffer.reset( new RingBuffer< float >[ inputsCount() ] );
+	inputSamples.reset( new float[ inputsCount() ]() );
 	setInputBuffer();
 	return true;
 }
@@ -23,7 +22,7 @@ void FIR::setSample( int input, float sample )
 void FIR::exec( Array< Sample > &samples )
 {
 	mutex.lock();
-	const float *fir_coeff_data = fir_coeff.data();
+	const float *fir_coeff_data = fir_coeff.constData();
 	for ( int i = 0 ; i < outputsCount() ; ++i )
 	{
 		float sum = 0.0;
@@ -49,9 +48,8 @@ void FIR::exec( Array< Sample > &samples )
 void FIR::stop()
 {
 	settings->setRunMode( false );
-	delete[] inputBuffer;
-	inputBuffer = NULL;
-	inputSamples.clear();
+	inputBuffer.reset();
+	inputSamples.reset();
 }
 
 Block *FIR::createInstance()

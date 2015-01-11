@@ -11,7 +11,7 @@ bool AlsaOut::start()
 	if ( !snd_pcm_open( &snd, devName.toLocal8Bit(), SND_PCM_STREAM_PLAYBACK, 0 ) && !snd_pcm_set_params( snd, SND_PCM_FORMAT_S32, SND_PCM_ACCESS_RW_INTERLEAVED, inputsCount(), Global::getSampleRate(), true, Global::getPeriod() * 4000000 ) )
 	{
 		settings->setRunMode( true );
-		buffer.resize( inputsCount() );
+		buffer.alloc( inputsCount(), true );
 		inBuffer.alloc( samplesToWrite * inputsCount() );
 		err = false;
 		return true;
@@ -58,7 +58,7 @@ void AlsaOut::stop()
 		snd_pcm_drop( snd );
 		snd_pcm_close( snd );
 		snd = NULL;
-		buffer.clear();
+		buffer.free();
 		inBuffer.free();
 		settings->setRunMode( false );
 	}

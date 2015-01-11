@@ -11,7 +11,7 @@ bool Integral::start()
 	if ( inputsCount() != outputsCount() )
 		return false;
 	for ( int i = 0 ; i < 3 ; ++i )
-		buffer[ i ].resize( inputsCount() );
+		buffer[ i ].reset( new float[ inputsCount() ]() );
 	settings->setRunMode( true );
 	return true;
 }
@@ -32,7 +32,7 @@ void Integral::stop()
 {
 	settings->setRunMode( false );
 	for ( int i = 0 ; i < 3 ; ++i )
-		buffer[ i ].clear();
+		buffer[ i ].reset();
 }
 
 Block *Integral::createInstance()

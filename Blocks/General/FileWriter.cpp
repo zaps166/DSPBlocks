@@ -28,7 +28,7 @@ void FileWriter::exec( Array< Sample > & )
 		if ( !textMode )
 		{
 			if ( !pcm_s16 )
-				f.write( ( char * )buffer.data(), buffer.size() * sizeof( float ) );
+				f.write( ( char * )buffer.constData(), buffer.size() * sizeof( float ) );
 			else for ( int i = 0 ; i < buffer.count() ; ++i )
 			{
 				qint16 s = buffer[ i ] * 32767.0;

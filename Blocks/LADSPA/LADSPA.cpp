@@ -1,6 +1,5 @@
 #include "LADSPA.hpp"
 #include "Global.hpp"
-#include "Array.hpp"
 
 #include <QDoubleSpinBox>
 #include <QCheckBox>
@@ -22,12 +21,13 @@ LADSPA::LADSPA( const QString &name, int numInputs, int numOutputs, const LADSPA
 
 bool LADSPA::start()
 {
+	const int bufferSize = qMax( inputsCount(), outputsCount() );
 	settings->setRunMode( true );
-	buffer.resize( qMax( inputsCount(), outputsCount() ) );
-	for ( int i = 0 ; i < buffer.count() ; ++i )
-		buffer[ i ].resize( BUFFER_SIZE );
+	buffer.reset( new QScopedArrayPointer< LADSPA_Data >[ bufferSize ] );
+	for ( int i = 0 ; i < bufferSize ; ++i )
+		buffer[ i ].reset( new LADSPA_Data[ BUFFER_SIZE ] );
 	int inPort = 0, outPort = 0;
-	for ( int j = 0 ; j < buffer.count() ; ++j )
+	for ( int j = 0 ; j < bufferSize ; ++j )
 	{
 		LADSPA_Handle ladspa_instance = ld.instantiate( &ld, Global::getSampleRate() );
 		if ( !ladspa_instance )
@@ -42,7 +42,7 @@ bool LADSPA::start()
 					ld.connect_port( ladspa_instance, i, buffer[ outPort++ ].data() );
 			}
 			else if ( LADSPA_IS_PORT_CONTROL( ld.PortDescriptors[ i ] ) )
-				ld.connect_port( ladspa_instance, i, &dynamic_cast< LADSPA_UI * >( settings->getAdditionalSettings() )->control[ ctlPort++ ] );
+				ld.connect_port( ladspa_instance, i, &reinterpret_cast< LADSPA_UI * >( settings->getAdditionalSettings() )->control[ ctlPort++ ] );
 		if ( ld.activate )
 			ld.activate( ladspa_instance );
 		ladspa_instances += ladspa_instance;
@@ -61,7 +61,7 @@ void LADSPA::exec( Array< Sample > &samples )
 	if ( ++pos == BUFFER_SIZE )
 	{
 		for ( int i = 0 ; i < ladspa_instances.count() ; ++i )
-			ld.run( ladspa_instances[ i ], buffer[ i ].count() );
+			ld.run( ladspa_instances.at( i ), BUFFER_SIZE );
 		pos = 0;
 	}
 	for ( int i = 0 ; i < outputsCount() ; ++i )
@@ -77,7 +77,7 @@ void LADSPA::stop()
 		ld.cleanup( ladspa_instance );
 	}
 	ladspa_instances.clear();
-	buffer.clear();
+	buffer.reset();
 }
 
 Block *LADSPA::createInstance()
@@ -95,13 +95,13 @@ Block *LADSPA::createInstance()
 
 void LADSPA::serialize( QDataStream &ds ) const
 {
-	QVector< LADSPA_Data > &control = dynamic_cast< LADSPA_UI * >( settings->getAdditionalSettings() )->control;
+	QVector< LADSPA_Data > &control = reinterpret_cast< LADSPA_UI * >( settings->getAdditionalSettings() )->control;
 	if ( !control.isEmpty() )
 		ds << control;
 }
 void LADSPA::deSerialize( QDataStream &ds )
 {
-	QList< QWidget * > &controlWList = dynamic_cast< LADSPA_UI * >( settings->getAdditionalSettings() )->controlWList;
+	QList< QWidget * > &controlWList = reinterpret_cast< LADSPA_UI * >( settings->getAdditionalSettings() )->controlWList;
 	if ( !controlWList.isEmpty() )
 	{
 		QVector< LADSPA_Data > tmp_control;

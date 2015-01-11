@@ -11,8 +11,11 @@ MOC_DIR = build/moc
 INCLUDEPATH += . ../../Lib
 DEPENDPATH  += . ../../Lib
 
-HEADERS +=          FFMpegIn.hpp Spectrum.hpp Equalizer.hpp PortAudioOut.hpp PortAudioIn.hpp PortAudio.hpp Image.hpp
-SOURCES += main.cpp FFMpegIn.cpp Spectrum.cpp Equalizer.cpp PortAudioOut.cpp PortAudioIn.cpp PortAudio.cpp Image.cpp
+HEADERS +=          FFMpegIn.hpp Spectrum.hpp PortAudioOut.hpp PortAudioIn.hpp PortAudio.hpp Image.hpp
+SOURCES += main.cpp FFMpegIn.cpp Spectrum.cpp PortAudioOut.cpp PortAudioIn.cpp PortAudio.cpp Image.cpp
+
+#HEADERS += Equalizer.hpp
+#SOURCES += Equalizer.cpp
 
 DEFINES += __STDC_CONSTANT_MACROS
 LIBS += -lavformat -lavcodec -lavutil -lswresample -lportaudio

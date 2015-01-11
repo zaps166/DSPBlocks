@@ -2,7 +2,7 @@
 	#include "AlsaOut.hpp"
 	#include "AlsaIn.hpp"
 #endif
-#include "Equalizer.hpp"
+//#include "Equalizer.hpp"
 #include "FFMpegIn.hpp"
 #include "Image.hpp"
 #include "PortAudioIn.hpp"
@@ -28,5 +28,5 @@ extern "C" QList< Block * > createBlocks()
 #ifdef USE_ALSA
 		new AlsaIn << new AlsaOut <<
 #endif
-		new Equalizer << new FFMpegIn << new Image << new PortAudioIn << new PortAudioOut << new Spectrum;
+		/*new Equalizer <<*/ new FFMpegIn << new Image << new PortAudioIn << new PortAudioOut << new Spectrum;
 }

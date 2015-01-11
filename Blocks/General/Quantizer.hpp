@@ -24,7 +24,7 @@ private:
 
 	void setLabel();
 
-	QVector< float > buffer;
+	QScopedArrayPointer< float > buffer;
 	quint8 bits;
 };
 

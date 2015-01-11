@@ -12,17 +12,19 @@ bool Counter::start()
 	if ( inputsCount() != outputsCount() )
 		return false;
 	settings->setRunMode( true );
-	lastState.resize( inputsCount() );
-	currState.resize( inputsCount() );
-	switch ( mode )
-	{
-		case MD_COUNTER:
-			cnt.fill( 0, inputsCount() );
-			break;
-		case MD_TIMER:
-			cnt.fill( cnt_val, inputsCount() );
-			break;
-	}
+	lastState.reset( new bool[ inputsCount() ]() );
+	currState.reset( new bool[ inputsCount() ]() );
+	cnt.reset( new qint32[ inputsCount() ] );
+	for ( int i = 0 ; i < inputsCount() ; ++i )
+		switch ( mode )
+		{
+			case MD_COUNTER:
+				cnt[ i ] = 0;
+				break;
+			case MD_TIMER:
+				cnt[ i ] = cnt_val;
+				break;
+		}
 	return true;
 }
 void Counter::setSample( int input, float sample )
@@ -72,14 +74,14 @@ void Counter::exec( Array< Sample > &samples )
 				break;
 		}
 	}
-	qSwap( currState, lastState );
+	currState.swap( lastState );
 }
 void Counter::stop()
 {
 	settings->setRunMode( false );
-	lastState.clear();
-	currState.clear();
-	cnt.clear();
+	lastState.reset();
+	currState.reset();
+	cnt.reset();
 }
 
 Block *Counter::createInstance()

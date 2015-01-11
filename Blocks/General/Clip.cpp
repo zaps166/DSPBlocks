@@ -11,7 +11,7 @@ bool Clip::start()
 	if ( inputsCount() != outputsCount() )
 		return false;
 	settings->setRunMode( true );
-	buffer.resize( inputsCount() );
+	buffer.reset( new float[ inputsCount() ]() );
 	return true;
 }
 void Clip::setSample( int input, float sample )
@@ -32,7 +32,7 @@ void Clip::exec( Array< Sample > &samples )
 void Clip::stop()
 {
 	settings->setRunMode( false );
-	buffer.clear();
+	buffer.reset();
 }
 
 Block *Clip::createInstance()

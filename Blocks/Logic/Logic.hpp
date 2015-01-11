@@ -21,7 +21,7 @@ private:
 	void serialize( QDataStream &ds ) const;
 	void deSerialize( QDataStream &ds );
 
-	QVector< bool > buffer;
+	QScopedArrayPointer< bool > buffer;
 	LogicType logicType;
 	float lo, hi;
 	bool state;

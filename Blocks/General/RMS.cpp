@@ -15,8 +15,10 @@ bool RMS::start()
 	if ( inputsCount() != outputsCount() )
 		return false;
 	settings->setRunMode( true );
-	partial_result.resize( inputsCount() );
-	result.fill( 0.0f / 0.0f, inputsCount() );
+	partial_result.reset( new double[ inputsCount() ]() );
+	result.reset( new float[ inputsCount() ] );
+	for ( int i = 0 ; i < inputsCount() ; ++i )
+		result[ i ] = 0.0f / 0.0f;
 	calcNumSamples();
 	pos = 0;
 	return true;
@@ -73,8 +75,8 @@ void RMS::exec( Array< Sample > &samples )
 void RMS::stop()
 {
 	settings->setRunMode( false );
-	partial_result.clear();
-	result.clear();
+	partial_result.reset();
+	result.reset();
 }
 
 Block *RMS::createInstance()
@@ -163,7 +165,7 @@ void RMS_UI::setValue( int v )
 void RMS_UI::setMode( int m )
 {
 	block.mode = m;
-	for ( int i = 0 ; i < block.partial_result.count() ; ++i )
+	for ( int i = 0 ; i < block.inputsCount() ; ++i )
 		block.partial_result[ i ] = 0.0f;
 	block.pos = 0;
 	block.setLabel();

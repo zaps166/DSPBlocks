@@ -10,7 +10,11 @@ Muxer::Muxer() :
 bool Muxer::start()
 {
 	settings->setRunMode( true );
-	buffer.fill( 0.0f/0.0f, inputsCount() );
+
+	buffer.reset( new float[ inputsCount() ] );
+	for ( int i = 0 ; i < inputsCount() ; ++i )
+		buffer[ i ] = 0.0f/0.0f;
+
 	return true;
 }
 void Muxer::setSample( int input, float sample )
@@ -27,7 +31,7 @@ void Muxer::exec( Array< Sample > &samples )
 void Muxer::stop()
 {
 	settings->setRunMode( false );
-	buffer.clear();
+	buffer.reset();
 }
 
 Block *Muxer::createInstance()

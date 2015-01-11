@@ -24,7 +24,7 @@ bool Quantizer::start()
 	if ( inputsCount() != outputsCount() )
 		return false;
 	settings->setRunMode( true );
-	buffer.resize( inputsCount() );
+	buffer.reset( new float[ inputsCount() ]() );
 	return true;
 }
 void Quantizer::setSample( int input, float sample )
@@ -39,7 +39,7 @@ void Quantizer::exec( Array< Sample > &samples )
 void Quantizer::stop()
 {
 	settings->setRunMode( false );
-	buffer.clear();
+	buffer.reset();
 }
 
 Block *Quantizer::createInstance()

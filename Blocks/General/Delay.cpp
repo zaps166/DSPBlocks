@@ -3,7 +3,6 @@
 
 Delay::Delay() :
 	Block( "Delay", "Opóźnienie o n próbek", 1, 1, PROCESSING ),
-	delayedSamples( NULL ),
 	delay( 1 )
 {}
 
@@ -12,7 +11,7 @@ bool Delay::start()
 	if ( inputsCount() != outputsCount() )
 		return false;
 	settings->setRunMode( true );
-	delayedSamples = new RingBuffer< float >[ inputsCount() ];
+	delayedSamples.reset( new RingBuffer< float >[ inputsCount() ] );
 	setDelayedSamples();
 	return true;
 }
@@ -32,8 +31,7 @@ void Delay::exec( Array< Sample > &samples )
 void Delay::stop()
 {
 	settings->setRunMode( false );
-	delete[] delayedSamples;
-	delayedSamples = NULL;
+	delayedSamples.reset();
 }
 
 Block *Delay::createInstance()
