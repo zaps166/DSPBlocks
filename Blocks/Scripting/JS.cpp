@@ -54,6 +54,25 @@ Block *JS::createInstance()
 {
 	JS *block = new JS;
 	block->settings = new Settings( *block, true, 1, maxIO, true, 1, maxIO, false, new ScriptingUI( *block ) );
+
+	SyntaxHighlighter::HighlightHints toHighlight;
+	toHighlight += qMakePair
+	(
+		QStringList() << "void" << "var" << "function",
+		SyntaxHighlighter::makeTxtChrFmt( Qt::darkRed )
+	);
+	toHighlight += qMakePair
+	(
+		QStringList() << "break" << "case" << "catch" << "const" << "continue" << "debugger" << "default" << "delete" << "do" << "else" << "finally" << "for" << "if" << "in" << "instanceof" << "new" << "return" << "switch" << "this" << "throw" << "try" << "typeof" << "while" << "with",
+		SyntaxHighlighter::makeTxtChrFmt( Qt::darkBlue )
+	);
+	toHighlight += qMakePair
+	(
+		QStringList() << "null" << "false" << "true" << "undefined",
+		SyntaxHighlighter::makeTxtChrFmt( Qt::darkGreen )
+	);
+	block->settings->getAdditionalSettings< ScriptingUI >()->setSyntaxHighlighter< SyntaxHighlighter >( toHighlight );
+
 	return block;
 }
 

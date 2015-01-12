@@ -26,6 +26,10 @@ class Settings : public QWidget
 public:
 	Settings( Block &block, bool canModifyInputs, quint8 inputsMin, quint8 inputsMax, bool canModifyOutputs, quint8 outputsMin, quint8 outputsMax, bool independent = false, AdditionalSettings *additionalSettings = NULL );
 
+	template< typename T > inline T *getAdditionalSettings()
+	{
+		return reinterpret_cast< T * >( additionalSettings );
+	}
 	inline AdditionalSettings *getAdditionalSettings()
 	{
 		return additionalSettings;

@@ -96,7 +96,7 @@ public:
 	friend QDataStream &operator <<( QDataStream &ds, const Block *block );
 	friend QDataStream &operator >>( QDataStream &ds, Block *block );
 protected:
-	static const quint8 maxIO = 26;
+	static const quint8 maxIO = 10;
 
 	inline QPair< Block *, quint8 > getTarget( int output ) const
 	{

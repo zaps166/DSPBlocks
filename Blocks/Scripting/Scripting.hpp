@@ -30,7 +30,10 @@ protected:
 
 #include "Settings.hpp"
 
-class QPlainTextEdit;
+#include "SyntaxHighlighter.hpp"
+#include "CodeEdit.hpp"
+
+class QSyntaxHighlighter;
 class QPushButton;
 class QLineEdit;
 class QSplitter;
@@ -42,6 +45,19 @@ class ScriptingUI : public AdditionalSettings
 public:
 	ScriptingUI( Scripting &block, const QString &version = QString() );
 
+	template< typename T > void setSyntaxHighlighter( SyntaxHighlighter::HighlightHints toHighlight )
+	{
+		toHighlight += qMakePair
+		(
+			QStringList() << "SampleRate",
+			SyntaxHighlighter::makeTxtChrFmt( Qt::darkGreen )
+		);
+		new T( code1E->document(), toHighlight );
+
+		toHighlight.last().first << "Out" << "In";
+		new T( code2E->document(), toHighlight );
+	}
+
 	void prepare();
 	bool canClose();
 
@@ -49,14 +65,14 @@ public:
 	void deSerialize( QDataStream &ds );
 private slots:
 	void apply();
-	void updateCurrentLine();
+	void updateCurrentLine( int line );
 private:
 	void setTitle();
 
 	QString initialWinTitle, version;
 	QPoint winPos;
 
-	QPlainTextEdit *code1E, *code2E;
+	CodeEdit *code1E, *code2E;
 	QLineEdit *labelE;
 	QPushButton *applyB;
 	QLabel *infoL;

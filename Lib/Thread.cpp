@@ -74,7 +74,7 @@ void Thread::run()
 	else
 	{
 		QString errStr;
-		sched_param param = { Global::getPriority() };
+		const sched_param param = { Global::getPriority() };
 		if ( pthread_setschedparam( pthread_self(), Global::getSched(), &param ) )
 			errStr = "Nie można ustawić schedulera.";
 		if ( Global::getCPU() )
@@ -189,7 +189,7 @@ void Thread::run()
 				case Global::NANOSLEEP:
 				{
 					qint64 t2 = Global::gettime();
-					long sleep_time = period - t2 + t1;
+					qint64 sleep_time = period - t2 + t1;
 					if ( sleep_time > 0 )
 					{
 						timespec ts = { 0, sleep_time };

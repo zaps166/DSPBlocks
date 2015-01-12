@@ -25,29 +25,29 @@
 
 extern "C" QList< Block * > createBlocks()
 {
-	return QList< Block * >() <<
-		 new Clip <<
-		 new Const <<
-		 new Counter <<
-		 new Delay <<
-		 new Differential <<
-		 new FileReader <<
-		 new FileWriter <<
-		 new FIR <<
-		 new Gain <<
-		 new IIR <<
-		 new Integral <<
-		 new Math <<
-		 new Multiplier <<
-		 new Muxer <<
-		 new PWM <<
-		 new Quantizer <<
-		 new RandomGen <<
-		 new Share <<
-		 new RMS <<
-		 new Scope <<
-		 new Sine <<
-		 new StdOut <<
-		 new Summation <<
-		 new VarDelay;
+	return QList< Block * >()
+		<< new Clip
+		<< new Const
+		<< new Counter
+		<< new Delay
+		<< new Differential
+		<< new FileReader
+		<< new FileWriter
+		<< new FIR
+		<< new Gain
+		<< new IIR
+		<< new Integral
+		<< new Math
+		<< new Multiplier
+		<< new Muxer
+		<< new PWM
+		<< new Quantizer
+		<< new RandomGen
+		<< new Share
+		<< new RMS
+		<< new Scope
+		<< new Sine
+		<< new StdOut
+		<< new Summation
+		<< new VarDelay;
 }

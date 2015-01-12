@@ -83,6 +83,25 @@ Block *Lua::createInstance()
 {
 	Lua *block = new Lua;
 	block->settings = new Settings( *block, true, 1, maxIO, true, 1, maxIO, false, new ScriptingUI( *block, LUA_VERSION ) );
+
+	SyntaxHighlighter::HighlightHints toHighlight;
+	toHighlight += qMakePair
+	(
+		QStringList() << "and" << "function" << "in" << "local" << "not" << "or",
+		SyntaxHighlighter::makeTxtChrFmt( Qt::darkRed )
+	);
+	toHighlight += qMakePair
+	(
+		QStringList() << "break" << "do" << "else" << "elseif" << "end" << "for" << "if" << "repeat" << "return" << "then" << "until" << "while",
+		SyntaxHighlighter::makeTxtChrFmt( Qt::darkBlue )
+	);
+	toHighlight += qMakePair
+	(
+		QStringList() << "nil" << "false" << "true",
+		SyntaxHighlighter::makeTxtChrFmt( Qt::darkGreen )
+	);
+	block->settings->getAdditionalSettings< ScriptingUI >()->setSyntaxHighlighter< SyntaxHighlighter >( toHighlight );
+
 	return block;
 }
 

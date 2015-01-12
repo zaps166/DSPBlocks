@@ -271,7 +271,7 @@ int Block::indexOf( const QVector< qreal > &posArr, QPointF pos, bool outputs )
 		for ( int i = 0 ; i < posArr.count() ; ++i )
 		{
 			int mid = round( posArr[ i ] );
-			if ( mid == pos.y() || mid == pos.y() - 1 || mid == pos.y() + 1 )
+			if ( mid >= pos.y() - 3 && mid <= pos.y() + 3 )
 				return i;
 		}
 	return -1;

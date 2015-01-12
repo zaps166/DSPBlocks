@@ -5,12 +5,12 @@
 void Scripting::serialize( QDataStream &ds ) const
 {
 	ds << label << code1 << code2;
-	reinterpret_cast< ScriptingUI * >( settings->getAdditionalSettings() )->serialize( ds );
+	settings->getAdditionalSettings< ScriptingUI >()->serialize( ds );
 }
 void Scripting::deSerialize( QDataStream &ds )
 {
 	ds >> label >> code1 >> code2;
-	reinterpret_cast< ScriptingUI * >( settings->getAdditionalSettings() )->deSerialize( ds );
+	settings->getAdditionalSettings< ScriptingUI >()->deSerialize( ds );
 	setLabel();
 }
 
@@ -31,7 +31,6 @@ QString Scripting::generateOutArray() const
 	return out_arr;
 }
 
-#include <QPlainTextEdit>
 #include <QPushButton>
 #include <QMessageBox>
 #include <QLineEdit>
@@ -44,16 +43,16 @@ ScriptingUI::ScriptingUI( Scripting &block, const QString &version ) :
 	version( version.isEmpty() ? QString() : ", " + version ),
 	block( block )
 {
-	code1E = new QPlainTextEdit;
+	code1E = new CodeEdit;
 	code1E->setTabStopWidth( 20 );
 	code1E->setFont( QFont( "Monospace" ) );
-	code1E->setLineWrapMode( QPlainTextEdit::NoWrap );
+	code1E->setLineWrapMode( CodeEdit::NoWrap );
 	code1E->setWhatsThis( "Globalne zmienne i funkcje. Zawiera:\n  - zmienna \"SampleRate\"\n  - tablica \"Out\"" );
 
-	code2E = new QPlainTextEdit;
+	code2E = new CodeEdit;
 	code2E->setTabStopWidth( 20 );
 	code2E->setFont( QFont( "Monospace" ) );
-	code2E->setLineWrapMode( QPlainTextEdit::NoWrap );
+	code2E->setLineWrapMode( CodeEdit::NoWrap );
 	code2E->setWhatsThis( "Główna funkcja. Zawiera:\n  - tablica \"In\"\nZwraca \"Out\"." );
 
 	applyB = new QPushButton( "Zastosuj" );
@@ -78,8 +77,8 @@ ScriptingUI::ScriptingUI( Scripting &block, const QString &version ) :
 	layout->addWidget( applyB, 2, 1, 1, 1 );
 	layout->setMargin( 3 );
 
-	connect( code1E, SIGNAL( cursorPositionChanged() ), this, SLOT( updateCurrentLine() ) );
-	connect( code2E, SIGNAL( cursorPositionChanged() ), this, SLOT( updateCurrentLine() ) );
+	connect( code1E, SIGNAL( lineNumber( int ) ), this, SLOT( updateCurrentLine( int ) ) );
+	connect( code2E, SIGNAL( lineNumber( int ) ), this, SLOT( updateCurrentLine( int ) ) );
 	connect( applyB, SIGNAL( clicked() ), this, SLOT( apply() ) );
 }
 
@@ -90,6 +89,7 @@ void ScriptingUI::prepare()
 	labelE->setText( label );
 	code1E->setPlainText( block.code1 );
 	code2E->setPlainText( block.code2 );
+	code1E->setExtraSelections( QList< CodeEdit::ExtraSelection >() );
 	code2E->setFocus();
 	if ( initialWinTitle.isNull() )
 		initialWinTitle = parentWidget()->windowTitle();
@@ -159,17 +159,14 @@ void ScriptingUI::apply()
 			QMessageBox::critical( this, block.getName(), errorStr );
 	}
 }
-void ScriptingUI::updateCurrentLine()
+void ScriptingUI::updateCurrentLine( int line )
 {
-	if ( QPlainTextEdit *textE = qobject_cast< QPlainTextEdit * >( sender() ) )
-	{
-		int add = 1;
-		if ( textE == code2E )
-			add += code1E->blockCount() + 3; //3 linie standardowego kodu
-		const QString txt = "Linia: " + QString::number( textE->textCursor().blockNumber() + add ) + version;
-		if ( txt != infoL->text() )
-			infoL->setText( txt );
-	}
+	int add = 0;
+	if ( qobject_cast< CodeEdit * >( sender() ) == code2E )
+		add += code1E->document()->blockCount() + 3; //3 linie standardowego kodu
+	const QString txt = "Linia: " + QString::number( line + add ) + version;
+	if ( txt != infoL->text() )
+		infoL->setText( txt );
 }
 
 void ScriptingUI::setTitle()

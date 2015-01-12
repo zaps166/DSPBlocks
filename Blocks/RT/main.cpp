@@ -7,5 +7,8 @@ extern const char groupName[] = "Real-time";
 
 extern "C" QList< Block * > createBlocks()
 {
-	return QList< Block * >() << new AtLPT_In << new AtLPT_Out;
+	return QList< Block * >()
+		<< new AtLPT_In
+		<< new AtLPT_Out
+	;
 }

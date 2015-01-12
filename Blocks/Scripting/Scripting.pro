@@ -11,8 +11,8 @@ MOC_DIR = build/moc
 INCLUDEPATH += . ../../Lib
 DEPENDPATH  += . ../../Lib
 
-HEADERS +=          Scripting.hpp
-SOURCES += main.cpp Scripting.cpp
+HEADERS +=          Scripting.hpp CodeEdit.hpp SyntaxHighlighter.hpp
+SOURCES += main.cpp Scripting.cpp CodeEdit.cpp SyntaxHighlighter.cpp
 
 QT += script
 HEADERS += JS.hpp
@@ -23,3 +23,8 @@ PKGCONFIG += luajit
 HEADERS += Lua.hpp
 SOURCES += Lua.cpp
 DEFINES += USE_LUA
+
+win32: {
+	QMAKE_LIBDIR += ../../App
+	LIBS += -lDSPBlocks
+}
