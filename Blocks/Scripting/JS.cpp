@@ -71,7 +71,7 @@ Block *JS::createInstance()
 		QStringList() << "null" << "false" << "true" << "undefined",
 		SyntaxHighlighter::makeTxtChrFmt( Qt::darkGreen )
 	);
-	block->settings->getAdditionalSettings< ScriptingUI >()->setSyntaxHighlighter< SyntaxHighlighter >( toHighlight );
+	block->settings->getAdditionalSettings< ScriptingUI >()->setSyntaxHighlighter< SyntaxHighlighter >( toHighlight, "//" );
 
 	return block;
 }

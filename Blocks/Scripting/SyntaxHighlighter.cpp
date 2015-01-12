@@ -17,7 +17,7 @@ void SyntaxHighlighter::highlightBlock( const QString &text )
 {
 	QString txt = text;
 
-	const int commentStartIdx = txt.indexOf( "--" );
+	const int commentStartIdx = txt.indexOf( comment );
 	if ( commentStartIdx > -1 )
 	{
 		const int len = txt.length() - commentStartIdx;

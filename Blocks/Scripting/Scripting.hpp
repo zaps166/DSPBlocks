@@ -45,17 +45,17 @@ class ScriptingUI : public AdditionalSettings
 public:
 	ScriptingUI( Scripting &block, const QString &version = QString() );
 
-	template< typename T > void setSyntaxHighlighter( SyntaxHighlighter::HighlightHints toHighlight )
+	template< typename T > void setSyntaxHighlighter( SyntaxHighlighter::HighlightHints toHighlight, const QString &comment )
 	{
 		toHighlight += qMakePair
 		(
 			QStringList() << "SampleRate",
 			SyntaxHighlighter::makeTxtChrFmt( Qt::darkGreen )
 		);
-		new T( code1E->document(), toHighlight );
+		new T( code1E->document(), toHighlight, comment );
 
 		toHighlight.last().first << "Out" << "In";
-		new T( code2E->document(), toHighlight );
+		new T( code2E->document(), toHighlight, comment );
 	}
 
 	void prepare();

@@ -100,7 +100,7 @@ Block *Lua::createInstance()
 		QStringList() << "nil" << "false" << "true",
 		SyntaxHighlighter::makeTxtChrFmt( Qt::darkGreen )
 	);
-	block->settings->getAdditionalSettings< ScriptingUI >()->setSyntaxHighlighter< SyntaxHighlighter >( toHighlight );
+	block->settings->getAdditionalSettings< ScriptingUI >()->setSyntaxHighlighter< SyntaxHighlighter >( toHighlight, "--" );
 
 	return block;
 }
