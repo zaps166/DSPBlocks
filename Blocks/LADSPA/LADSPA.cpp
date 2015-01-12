@@ -138,7 +138,7 @@ LADSPA_UI::LADSPA_UI( LADSPA &block ) :
 
 	QList< unsigned long > ladspa_descriptors_idx;
 	for ( unsigned long i = 0 ; i < ld.PortCount ; ++i )
-		if ( LADSPA_IS_PORT_CONTROL( ld.PortDescriptors[ i ] ) )
+		if ( LADSPA_IS_PORT_CONTROL( ld.PortDescriptors[ i ] ) && LADSPA_IS_PORT_INPUT( ld.PortDescriptors[ i ] ) )
 			ladspa_descriptors_idx += i;
 	if ( !ladspa_descriptors_idx.isEmpty() )
 	{
