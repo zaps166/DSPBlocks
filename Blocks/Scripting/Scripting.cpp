@@ -1,5 +1,6 @@
 #include "Scripting.hpp"
 
+#include <QApplication>
 #include <QDebug>
 
 void Scripting::serialize( QDataStream &ds ) const
@@ -143,20 +144,27 @@ void ScriptingUI::apply()
 	block.setLabel();
 	if ( code1E->document()->isModified() || code2E->document()->isModified() )
 	{
-		QString errorStr;
-
 		block.code1 = code1E->toPlainText().toUtf8();
 		block.code2 = code2E->toPlainText().toUtf8();
 
-		block.mutex.lock();
-		block.compile( &errorStr );
-		block.mutex.unlock();
+		qApp->setOverrideCursor( Qt::BusyCursor );
+		bool locked = block.mutex.tryLock( 2000 );
+		qApp->restoreOverrideCursor();
+		if ( !locked )
+			QMessageBox::warning( this, block.getName(), "Skrypt nie odpowiada" );
+		else
+		{
+			QString errorStr;
 
-		code1E->document()->setModified( false );
-		code2E->document()->setModified( false );
+			block.compile( &errorStr );
+			block.mutex.unlock();
 
-		if ( !errorStr.isEmpty() )
-			QMessageBox::critical( this, block.getName(), errorStr );
+			code1E->document()->setModified( false );
+			code2E->document()->setModified( false );
+
+			if ( !errorStr.isEmpty() )
+				QMessageBox::critical( this, block.getName(), errorStr );
+		}
 	}
 }
 void ScriptingUI::updateCurrentLine( int line )

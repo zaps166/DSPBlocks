@@ -17,6 +17,8 @@
 #include <QFile>
 #include <QDir>
 
+#include <signal.h>
+
 #ifndef Q_OS_WIN
 	#define UNIX_CDUP "/.."
 	#ifndef Q_OS_MAC
@@ -188,8 +190,13 @@ MainWindow::~MainWindow()
 	settings.setValue( "RealTime/RtMode", Global::getRtMode() );
 #endif
 
-	thread.stop();
-	threadStopped();
+	if( thread.stop() )
+		threadStopped();
+	else
+	{
+		qDebug().nospace() << "Wymuszenie zakończenia " << qApp->applicationName() << "...";
+		::raise( SIGTERM );
+	}
 
 	qApp->quit();
 }
@@ -210,7 +217,6 @@ void MainWindow::threadStopped()
 	qApp->setProperty( "allBlocks", QVariant() );
 	allBlocks.clear();
 }
-
 void MainWindow::saveState()
 {
 	QByteArray state = save();
@@ -278,8 +284,13 @@ void MainWindow::on_actionStart_triggered( bool checked )
 {
 	if ( !checked )
 	{
-		thread.stop();
-		setItemsEnabled( true );
+		if ( thread.stop() )
+			setItemsEnabled( true );
+		else
+		{
+			ui.actionStart->setChecked( true );
+			QMessageBox::warning( this, qApp->applicationName(), "Program nie odpowiada. Zapisz projekt i zakończ pracę programu." );
+		}
 	}
 	else
 	{
@@ -352,33 +363,15 @@ void MainWindow::on_action_Ustawienia_triggered()
 		saveState();
 	}
 }
-void MainWindow::realTimeModeSettings()
-{
-#ifdef Q_OS_LINUX
-	RTSettings rtSettings( this );
-	rtSettings.exec();
-#endif
-}
 void MainWindow::on_action_U_yj_natywnych_okien_dialogowych_triggered( bool n )
 {
 	Global::setNativeFileDialog( n );
 	settings.setValue( "NativeFileDialog", n );
 }
-void MainWindow::showRealSampleRate()
-{
-#ifdef Q_OS_LINUX
-	if ( thread.isRealTimeNow() )
-	{
-		stopStatusUpdates();
-		startStatusUpdates();
-	}
-#endif
-}
 void MainWindow::on_action_O_programie_triggered()
 {
 	QMessageBox::information( this, QString( ( ( QAction * )sender() )->text() ).remove( '&' ), "Programista: Błażej Szczygieł" );
 }
-
 void MainWindow::on_blocksFilterE_textChanged( const QString &txt )
 {
 	foreach ( QTreeWidgetItem *item, ui.blocksW->findItems( QString(), Qt::MatchContains | Qt::MatchRecursive ) )
@@ -390,6 +383,23 @@ void MainWindow::errorMessage( const QString &msg )
 {
 #ifdef Q_OS_LINUX
 	QMessageBox::critical( this, "Tryb czasu rzeczywistego", msg );
+#endif
+}
+void MainWindow::realTimeModeSettings()
+{
+#ifdef Q_OS_LINUX
+	RTSettings rtSettings( this );
+	rtSettings.exec();
+#endif
+}
+void MainWindow::showRealSampleRate()
+{
+#ifdef Q_OS_LINUX
+	if ( thread.isRealTimeNow() )
+	{
+		stopStatusUpdates();
+		startStatusUpdates();
+	}
 #endif
 }
 void MainWindow::updateSRate()

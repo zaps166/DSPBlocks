@@ -10,11 +10,12 @@
 #endif
 #ifdef Q_OS_LINUX
 	#include <sys/time.h>
-	#include <sys/mman.h>
+//	#include <sys/mman.h>
 	#include <pthread.h>
 	#include <sched.h>
 #endif
 
+#include <QApplication>
 #include <QDebug>
 
 void Thread::start( const QVector< Block * > &sources, quint64 simSamples, bool isBlocking )
@@ -35,16 +36,21 @@ void Thread::start( const QVector< Block * > &sources, quint64 simSamples, bool 
 
 	QThread::start();
 }
-void Thread::stop()
+bool Thread::stop()
 {
+	bool ok = true;
 	if ( isRunning() )
 	{
 		br = true;
-		wait();
+		qApp->setOverrideCursor( Qt::WaitCursor );
+		ok = wait( 2500 );
+		qApp->restoreOverrideCursor();
 #ifdef Q_OS_WIN
-		timeEndPeriod( 1 );
+		if ( ok )
+			timeEndPeriod( 1 );
 #endif
 	}
+	return ok;
 }
 
 void Thread::run()
@@ -90,7 +96,7 @@ void Thread::run()
 			}
 		}
 //		if ( mlockall( MCL_CURRENT | MCL_FUTURE ) )
-//			perror( "mlockall" );
+//			perror( "mlockall failed" );
 		if ( !errStr.isEmpty() )
 		{
 			errStr += "\nSprawdź uprawnienia!";
@@ -236,4 +242,9 @@ void Thread::run()
 	}
 
 	sources.clear();
+
+//#ifdef Q_OS_LINUX
+//	if ( rt && munlockall() )
+//		 perror( "munlockall failed" );
+//#endif
 }

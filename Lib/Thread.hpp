@@ -22,7 +22,7 @@ public:
 #endif
 
 	void start( const QVector< Block * > &sources, quint64 simSamples, bool isBlocking );
-	void stop();
+	bool stop();
 signals:
 	void errorMessage( const QString &msg );
 private:

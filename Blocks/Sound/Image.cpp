@@ -73,7 +73,7 @@ bool Image::fft_gen_img()
 		rdy_samples.resize( 0 );
 	else
 	{
-		int fftSize   = 1 << fftNbits;
+		const int fftSize = 1 << fftNbits;
 
 		FFTContext *fftOut = av_fft_init( fftNbits, true );
 		FFTComplex *fftCplx = ( FFTComplex * )av_malloc( fftSize * sizeof( FFTComplex ) );

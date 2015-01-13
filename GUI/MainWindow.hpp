@@ -22,7 +22,6 @@ public:
 	~MainWindow();
 private slots:
 	void threadStopped();
-
 	void saveState();
 
 	void on_actionNowy_triggered();
@@ -33,14 +32,13 @@ private slots:
 	void on_actionPrzywr_c_triggered();
 	void on_actionStart_triggered( bool checked );
 	void on_action_Ustawienia_triggered();
-	void realTimeModeSettings();
 	void on_action_U_yj_natywnych_okien_dialogowych_triggered( bool n );
-	void showRealSampleRate();
 	void on_action_O_programie_triggered();
-
 	void on_blocksFilterE_textChanged( const QString &txt );
 
 	void errorMessage( const QString &msg );
+	void realTimeModeSettings();
+	void showRealSampleRate();
 	void updateSRate();
 private:
 	void nowy();
