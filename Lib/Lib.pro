@@ -11,6 +11,7 @@ DEPENDPATH  += .
 win32: DESTDIR = ../App
 else:  DESTDIR = ../App/lib
 
+#unix: DEFINES += USE_MLOCKALL
 #linux*: LIBS += -Wl,@/usr/xenomai/lib/posix.wrappers -L/usr/xenomai/lib -lpthread_rt -lxenomai
 
 SOURCES += Scene.cpp Block.cpp Settings.cpp WindFunc.cpp GraphW.cpp DrawHelper.cpp Global.cpp Thread.cpp

@@ -9,14 +9,15 @@
 	#include <mmsystem.h>
 #endif
 #ifdef Q_OS_LINUX
+	#ifdef USE_MLOCKALL
+		#include <sys/mman.h>
+	#endif
 	#include <sys/time.h>
-//	#include <sys/mman.h>
 	#include <pthread.h>
 	#include <sched.h>
 #endif
 
 #include <QApplication>
-#include <QDebug>
 
 void Thread::start( const QVector< Block * > &sources, quint64 simSamples, bool isBlocking )
 {
@@ -56,7 +57,7 @@ bool Thread::stop()
 void Thread::run()
 {
 	Array< Block::Sample > samples;
-	Array< Block * > blocks/*, crossBlocksStart, crossBlocksStart2*/;
+	Array< Block * > blocks;
 
 	quint32 counter = 0, counter_ov = 0, period;
 	qint64 t1 = 0;
@@ -95,8 +96,10 @@ void Thread::run()
 				errStr += "Nie można ustawić CPU affinity.";
 			}
 		}
-//		if ( mlockall( MCL_CURRENT | MCL_FUTURE ) )
-//			perror( "mlockall failed" );
+#ifdef USE_MLOCKALL
+		if ( mlockall( MCL_CURRENT | MCL_FUTURE ) )
+			perror( "mlockall failed" );
+#endif
 		if ( !errStr.isEmpty() )
 		{
 			errStr += "\nSprawdź uprawnienia!";
@@ -125,68 +128,20 @@ void Thread::run()
 		while ( blocks.notEmpty() )
 		{
 			for ( int i = 0 ; i < blocks.count() ; ++i )
-			{
-//				printf( "%s	", blocks[ i ]->getName().toUtf8().data() );
-//				int sc = samples.count();
 				blocks[ i ]->exec( samples );
-//				for ( int sci = sc ; sci < samples.count() ; ++sci )
-				{
-//					printf( "%.0f ", samples[ sci ].sample );
-				}
-//				putchar( 10 );
-//				fflush( stdout );
-			}
 			blocks.clear();
 			for ( int i = 0 ; i < samples.count() ; ++i )
 			{
 				Block *block = samples[ i ].target.first;
 				if ( block )
 				{
-//					bool e = false;
-//					for ( int j = 0 ; j < crossBlocksStart2.count() ; ++j )
-//						if ( block == crossBlocksStart2[ j ] )
-//						{
-//							e = true;
-//							break;
-//						}
-//					if ( e )
-//						continue;
-
 					block->setSample( samples[ i ].target.second, samples[ i ].sample );
-					if ( !block->allConnectedInputsHasSample() )
-					{
-//						crossBlocksStart += block;
-					}
-					else
-					{
+					if ( block->allConnectedInputsHasSample() )
 						blocks += block;
-//						for ( int i = 0 ; i < crossBlocksStart.count() ; ++i )
-//							if ( crossBlocksStart[ i ] == block )
-//								crossBlocksStart[ i ] = NULL;
-					}
 				}
 			}
 			samples.clear();
 		}
-
-//		crossBlocksStart2.clear();
-//		for ( int i = 0 ; i < crossBlocksStart.count() ; ++i )
-//		{
-//			Block *block = crossBlocksStart[ i ];
-//			if ( block )
-//			{
-//				blocks += block;
-//				crossBlocksStart2 += block;
-//				block->setInputsDone();
-//				qDebug() << block->getName();
-//			}
-//		}
-//		crossBlocksStart.clear();
-//		if ( blocks.notEmpty() )
-//			continue;
-
-//		usleep( 0 );
-
 #ifdef Q_OS_LINUX
 		if ( rt )
 		{
@@ -198,7 +153,7 @@ void Thread::run()
 					qint64 sleep_time = period - t2 + t1;
 					if ( sleep_time > 0 )
 					{
-						timespec ts = { 0, sleep_time };
+						timespec ts = { 0, ( long )sleep_time };
 						nanosleep( &ts, NULL );
 					}
 					t1 = Global::gettime();
@@ -237,14 +192,12 @@ void Thread::run()
 		}
 		if ( simSamples && !--simSamples )
 			break;
-//		putchar( 10 );
-//		fflush( stdout );
 	}
 
 	sources.clear();
 
-//#ifdef Q_OS_LINUX
-//	if ( rt && munlockall() )
-//		 perror( "munlockall failed" );
-//#endif
+#if defined Q_OS_LINUX && defined USE_MLOCKALL
+	if ( rt && munlockall() )
+		 perror( "munlockall failed" );
+#endif
 }

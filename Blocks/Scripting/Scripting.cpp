@@ -1,7 +1,6 @@
 #include "Scripting.hpp"
 
 #include <QApplication>
-#include <QDebug>
 
 void Scripting::serialize( QDataStream &ds ) const
 {
@@ -54,7 +53,7 @@ ScriptingUI::ScriptingUI( Scripting &block, const QString &version ) :
 	code2E->setTabStopWidth( 20 );
 	code2E->setFont( QFont( "Monospace" ) );
 	code2E->setLineWrapMode( CodeEdit::NoWrap );
-	code2E->setWhatsThis( "Główna funkcja. Zawiera:\n  - tablica \"In\"\nZwraca \"Out\"." );
+	code2E->setWhatsThis( "Główna funkcja. Zawiera:\n  - tablica \"In\"\nZwraca tablicę \"Out\"." );
 
 	applyB = new QPushButton( "Zastosuj" );
 	applyB->setShortcut( QKeySequence( "Ctrl+S" ) );

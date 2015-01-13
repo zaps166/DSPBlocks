@@ -98,7 +98,7 @@ Block *Lua::createInstance()
 	toHighlight += qMakePair
 	(
 		QStringList() << "nil" << "false" << "true",
-		SyntaxHighlighter::makeTxtChrFmt( Qt::darkGreen )
+		SyntaxHighlighter::makeTxtChrFmt( Qt::darkCyan )
 	);
 	block->settings->getAdditionalSettings< ScriptingUI >()->setSyntaxHighlighter< SyntaxHighlighter >( toHighlight, "--" );
 

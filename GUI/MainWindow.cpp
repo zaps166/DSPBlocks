@@ -409,7 +409,7 @@ void MainWindow::updateSRate()
 	if ( realSampleRate != lastRealSampleRate )
 	{
 		if ( realSampleRate >= 0 )
-			statusL->setText( QString( "Próbkowanie: %1 Hz" ).arg( realSampleRate / 10.0 ) );
+			statusL->setText( QString( "Próbkowanie: %1 Hz" ).arg( realSampleRate / 10.0, 12, 'f', 1 ) );
 		lastRealSampleRate = realSampleRate;
 	}
 #endif

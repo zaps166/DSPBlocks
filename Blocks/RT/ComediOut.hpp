@@ -1,0 +1,4 @@
+#ifndef COMEDIOUT_HPP
+#define COMEDIOUT_HPP
+
+#endif // COMEDIOUT_HPP

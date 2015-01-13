@@ -17,12 +17,13 @@ SOURCES += main.cpp Scripting.cpp CodeEdit.cpp SyntaxHighlighter.cpp
 QT += script
 HEADERS += JS.hpp
 SOURCES += JS.cpp
-DEFINES += USE_JS
 
-PKGCONFIG += luajit
-HEADERS += Lua.hpp
-SOURCES += Lua.cpp
-DEFINES += USE_LUA
+packagesExist(luajit) {
+	PKGCONFIG += luajit
+	HEADERS += Lua.hpp
+	SOURCES += Lua.cpp
+	DEFINES += USE_LUA
+}
 
 win32: {
 	QMAKE_LIBDIR += ../../App
