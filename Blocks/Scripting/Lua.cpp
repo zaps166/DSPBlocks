@@ -13,7 +13,8 @@
 
 Lua::Lua() :
 	Scripting( "Lua", "Wprowadzanie kodu w języku Lua", "for i=1, math.min(#In, #Out) do\n\tOut[i] = In[i]\nend\n" ),
-	lua( NULL )
+	lua( NULL ),
+	err( true )
 {}
 Lua::~Lua()
 {
@@ -112,7 +113,6 @@ bool Lua::compile( QString *errorStr )
 		lua = luaL_newstate();
 		luaL_openlibs( lua );
 	}
-
 	const QString code =
 		"local SampleRate = " + QString::number( Global::getSampleRate() ) + "\n"
 		"local Out = {" + generateOutArray() + "}\n"
@@ -121,7 +121,6 @@ bool Lua::compile( QString *errorStr )
 			+ code2 + "\n" +
 			"return Out\n"
 		"end";
-
 	if ( luaL_loadstring( lua, code.toUtf8() ) || lua_pcall( lua, 0, 0, 0 ) )
 	{
 		if ( errorStr )
@@ -130,7 +129,6 @@ bool Lua::compile( QString *errorStr )
 		err = true;
 		return false;
 	}
-
 	err = false;
 	return true;
 }

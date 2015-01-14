@@ -6,7 +6,8 @@
 #include <QDebug>
 
 JS::JS() :
-	Scripting( "JavaScript", "Wprowadzanie kodu w języku JavaScript", "for (i = 0; i < Math.min(Out.length, In.length); ++i)\n{\n\tOut[i] = In[i]\n}\n" )
+	Scripting( "JavaScript", "Wprowadzanie kodu w języku JavaScript", "for (i = 0; i < Math.min(Out.length, In.length); ++i)\n{\n\tOut[i] = In[i]\n}\n" ),
+	err( true )
 {}
 
 bool JS::start()

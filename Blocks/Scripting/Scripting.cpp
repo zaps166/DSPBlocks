@@ -45,12 +45,14 @@ ScriptingUI::ScriptingUI( Scripting &block, const QString &version ) :
 {
 	code1E = new CodeEdit;
 	code1E->setTabStopWidth( 20 );
+	code1E->setAcceptRichText( false );
 	code1E->setFont( QFont( "Monospace" ) );
 	code1E->setLineWrapMode( CodeEdit::NoWrap );
 	code1E->setWhatsThis( "Globalne zmienne i funkcje. Zawiera:\n  - zmienna \"SampleRate\"\n  - tablica \"Out\"" );
 
 	code2E = new CodeEdit;
 	code2E->setTabStopWidth( 20 );
+	code2E->setAcceptRichText( false );
 	code2E->setFont( QFont( "Monospace" ) );
 	code2E->setLineWrapMode( CodeEdit::NoWrap );
 	code2E->setWhatsThis( "Główna funkcja. Zawiera:\n  - tablica \"In\"\nZwraca tablicę \"Out\"." );
@@ -168,9 +170,9 @@ void ScriptingUI::apply()
 }
 void ScriptingUI::updateCurrentLine( int line )
 {
-	int add = 0;
+	int add = 2;
 	if ( qobject_cast< CodeEdit * >( sender() ) == code2E )
-		add += code1E->document()->blockCount() + 3; //3 linie standardowego kodu
+		add += code1E->document()->blockCount() + 1;
 	const QString txt = "Linia: " + QString::number( line + add ) + version;
 	if ( txt != infoL->text() )
 		infoL->setText( txt );
