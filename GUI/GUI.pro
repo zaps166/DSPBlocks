@@ -34,6 +34,8 @@ linux*: {
 	FORMS   += RTSettings.ui
 }
 
+RESOURCES += Res.qrc
+
 OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
 UI_DIR = build/ui

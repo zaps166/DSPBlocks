@@ -13,6 +13,7 @@ int main( int argc, char *argv[] )
 #endif
 	QApplication app( argc, argv );
 	app.setQuitOnLastWindowClosed( false );
+	app.setWindowIcon( QIcon( ":/DSPBlocks-32x32" ) );
 	QSettings settings( QSettings::IniFormat, QSettings::UserScope, "DSPBlocks" );
 	new MainWindow( settings );
 	return app.exec();

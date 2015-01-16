@@ -2,7 +2,32 @@
 
 static inline bool chkFragment( const QString &txt )
 {
-	return txt.isEmpty() || txt == " " || txt == "\t" || txt == "(" || txt == ")" || txt == "{" || txt == "}" || txt == "[" || txt == "]" || txt == ":" || txt == ";" || txt == "." || txt == "#";
+	static const QStringList chrs = QStringList()
+		<< QString()
+		<< " "
+		<< "\t"
+		<< "("
+		<< ")"
+		<< "{"
+		<< "}"
+		<< "["
+		<< "]"
+		<< ":"
+		<< ";"
+		<< "."
+		<< "#"
+		<< "+"
+		<< "-"
+		<< "/"
+		<< "*"
+		<< "="
+		<< "!"
+		<< "%"
+	;
+	foreach ( const QString &chr, chrs )
+		if ( txt == chr )
+			return true;
+	return false;
 }
 
 QTextCharFormat SyntaxHighlighter::makeTxtChrFmt( const QBrush &color )

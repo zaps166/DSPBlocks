@@ -49,7 +49,6 @@ Settings::Settings( Block &block, bool canModifyInputs, quint8 inputsMin, quint8
 	additionalSettings( additionalSettings )
 {
 	setWindowTitle( "Ustawienia \"" + block.getName() + '"' );
-	setWindowFlags( Qt::Dialog );
 
 	QVBoxLayout *layout = new QVBoxLayout( this );
 	layout->setMargin( 3 );
