@@ -15,6 +15,7 @@ static inline bool chkFragment( const QString &txt )
 		<< ":"
 		<< ";"
 		<< "."
+		<< ","
 		<< "#"
 		<< "+"
 		<< "-"

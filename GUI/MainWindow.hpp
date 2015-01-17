@@ -53,6 +53,8 @@ private:
 	bool errorReadingScheme();
 
 	void closeEvent( QCloseEvent *event );
+	void dragEnterEvent( QDragEnterEvent *event );
+	void dropEvent( QDropEvent *event );
 
 	QByteArray save();
 	bool restore( const QByteArray &save );

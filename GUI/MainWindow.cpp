@@ -16,6 +16,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QDir>
+#include <QUrl>
 
 #include <signal.h>
 
@@ -238,11 +239,7 @@ void MainWindow::on_actionNowy_triggered()
 void MainWindow::on_actionOtw_rz_triggered()
 {
 	if ( askToSave() )
-	{
-		QString fName = QFileDialog::getOpenFileName( this, "Wybierz plik schematu", projectFile, "Schematy (*.dblcks)", NULL, Global::getNativeFileDialogFlag() );
-		if ( !fName.isEmpty() )
-			loadFile( fName );
-	}
+		loadFile( QFileDialog::getOpenFileName( this, "Wybierz plik schematu", projectFile, "Schematy (*.dblcks)", NULL, Global::getNativeFileDialogFlag() ) );
 }
 void MainWindow::on_actionZapisz_triggered()
 {
@@ -502,6 +499,20 @@ void MainWindow::closeEvent( QCloseEvent *event )
 {
 	if ( !askToSave() )
 		event->ignore();
+}
+void MainWindow::dragEnterEvent( QDragEnterEvent *event )
+{
+	if ( event && event->mimeData() && event->mimeData()->hasUrls() )
+	{
+		const QString url = event->mimeData()->urls().first().toLocalFile();
+		if ( url.toLower().endsWith( ".dblcks" ) )
+			event->accept();
+	}
+}
+void MainWindow::dropEvent( QDropEvent *event )
+{
+	if ( event && event->mimeData() && event->mimeData()->hasUrls() && askToSave() )
+		loadFile( event->mimeData()->urls().first().toLocalFile() );
 }
 
 QByteArray MainWindow::save()

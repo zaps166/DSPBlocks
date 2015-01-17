@@ -1,7 +1,13 @@
 #include "SchemeView.hpp"
 
+#include <QDragEnterEvent>
 #include <QWheelEvent>
-#include <QDebug>
+
+void SchemeView::dragEnterEvent( QDragEnterEvent *event )
+{
+	if ( event && event->mimeData() && !event->mimeData()->hasUrls() )
+		return QGraphicsView::dragEnterEvent( event );
+}
 
 void SchemeView::wheelEvent( QWheelEvent *event )
 {

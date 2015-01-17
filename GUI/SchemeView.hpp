@@ -9,9 +9,10 @@ public:
 	inline SchemeView( QWidget *parent = NULL ) :
 		QGraphicsView( parent )
 	{}
+
+	void dragEnterEvent( QDragEnterEvent *event );
 private:
 	void wheelEvent( QWheelEvent *event );
-//	void mouseMoveEvent();
 };
 
 #endif // SCHEMEVIEW_HPP
