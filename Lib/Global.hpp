@@ -116,14 +116,21 @@ public:
 	{
 		return rt_mode;
 	}
+#else
+	static inline bool isRealTime()
+	{
+		return false;
+	}
 #endif
 private:
 	static bool nativeFileDialogFlag;
 	static int sampleRate, refTime;
 
+#ifdef Q_OS_LINUX
 	static bool realTime;
 	static RT_MODE rt_mode;
 	static int cpu, sched, priority;
+#endif
 };
 
 #endif // GLOBAL_HPP

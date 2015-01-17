@@ -1,5 +1,5 @@
 TEMPLATE = lib
-CONFIG += plugin link_pkgconfig
+CONFIG += plugin
 
 DESTDIR = ../../App/share/DSPBlocks/blocks
 
@@ -18,11 +18,16 @@ QT += script
 HEADERS += JS.hpp
 SOURCES += JS.cpp
 
-packagesExist(luajit) {
-	PKGCONFIG += luajit
+!win32: CONFIG += link_pkgconfig
+if ( win32|packagesExist(luajit) ) {
 	HEADERS += Lua.hpp
 	SOURCES += Lua.cpp
 	DEFINES += USE_LUA
+	win32: {
+		INCLUDEPATH += luajit-2.0
+		LIBS += -lluajit
+	}
+	else: PKGCONFIG += luajit
 }
 
 win32: {

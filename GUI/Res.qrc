@@ -1,5 +1,7 @@
 <RCC>
-    <qresource prefix="/">
-        <file alias="DSPBlocks-32x32">Res/DSPBlocks-32x32.png</file>
-    </qresource>
+	<qresource prefix="/">
+		<file alias="DSPBlocks-16x16">Res/DSPBlocks-16x16.png</file>
+		<file alias="DSPBlocks-48x48">Res/DSPBlocks-48x48.png</file>
+		<file alias="DSPBlocks-32x32">Res/DSPBlocks-32x32.png</file>
+	</qresource>
 </RCC>

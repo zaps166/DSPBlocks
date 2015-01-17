@@ -8,7 +8,10 @@ TARGET = DSPBlocks
 INCLUDEPATH += .
 DEPENDPATH  += .
 
-win32: DESTDIR = ../App
+win32 {
+	DESTDIR = ../App
+	LIBS += -lwinmm
+}
 else:  DESTDIR = ../App/lib
 
 #unix: DEFINES += USE_MLOCKALL

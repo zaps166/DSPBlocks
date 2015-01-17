@@ -5,8 +5,10 @@
 //#include "Equalizer.hpp"
 #include "FFMpegIn.hpp"
 #include "Image.hpp"
-#include "PortAudioIn.hpp"
-#include "PortAudioOut.hpp"
+#ifdef USE_PORTAUDIO
+	#include "PortAudioIn.hpp"
+	#include "PortAudioOut.hpp"
+#endif
 #include "Spectrum.hpp"
 
 extern "C"
@@ -21,7 +23,9 @@ extern "C" QList< Block * > createBlocks()
 	{
 		av_register_all();
 		avformat_network_init();
+#ifdef USE_PORTAUDIO
 		Pa_Initialize();
+#endif
 		once = true;
 	}
 	return QList< Block * >()
@@ -32,8 +36,10 @@ extern "C" QList< Block * > createBlocks()
 //		<< new Equalizer
 		<< new FFMpegIn
 		<< new Image
+#ifdef USE_PORTAUDIO
 		<< new PortAudioIn
 		<< new PortAudioOut
+#endif
 		<< new Spectrum
 	;
 }

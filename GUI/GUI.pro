@@ -14,10 +14,8 @@ CONFIG += console
 win32: DESTDIR = ../App
 else:  DESTDIR = ../App/bin
 
-win32 {
-	QMAKE_LIBDIR += ../App
-	LIBS += -lwinmm
-} else {
+win32: QMAKE_LIBDIR += ../App
+else {
 	!mac: QMAKE_LFLAGS += -Wl,-rpath=\'\$\$ORIGIN\'/../lib
 	QMAKE_LIBDIR += ../App/lib
 	LIBS += -lrt
@@ -35,6 +33,7 @@ linux*: {
 }
 
 RESOURCES += Res.qrc
+win32: RC_FILE = Win/Icon.rc
 
 OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
