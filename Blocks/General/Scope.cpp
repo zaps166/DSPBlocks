@@ -29,6 +29,7 @@ Scope::Scope() :
 	setStyle( &style );
 	setWindowTitle( "Oscyloskop" );
 	setPalette( Qt::black );
+	setMouseTracking( true );
 }
 
 bool Scope::start()
@@ -244,6 +245,12 @@ void Scope::showEvent( QShowEvent *event )
 		geo.clear();
 	}
 	QWidget::showEvent( event );
+}
+void Scope::mouseMoveEvent( QMouseEvent *event )
+{
+	const int maxVal = 2000 / scale;
+	QWidget::setToolTip( QString( "%1" ).arg( ( maxVal / 2 - ( event->pos().y() * inputsCount() * maxVal / height() ) % maxVal ) / 1000.0, 0, 'f', 3 ) );
+	QWidget::mouseMoveEvent( event );
 }
 
 #include <QDoubleSpinBox>

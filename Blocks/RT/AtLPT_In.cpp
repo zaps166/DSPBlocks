@@ -4,10 +4,10 @@
 
 #include <sys/io.h>
 
-static inline qint16 recvSample( quint8 chn )
+static inline quint16 recvSample( quint8 chn )
 {
 	outb( ( chn << 7 ) | 0x40, EPP_DATA );
-	return ( qint16 )( ( ( inb( EPP_DATA ) & 0x1F ) << 5 ) | ( inb( EPP_DATA ) >> 3 ) ) - 0x1FF;
+	return ( ( inb( EPP_DATA ) & 0x1F ) << 5 ) | ( inb( EPP_DATA ) >> 3 );
 }
 
 /**/
@@ -28,7 +28,7 @@ bool AtLPT_In::start()
 void AtLPT_In::exec( Array< Block::Sample > &samples )
 {
 	for ( int i = 0 ; i < outputsCount() ; ++i )
-		samples += ( Sample ){ getTarget( i ), recvSample( i ) / 511.0f };
+		samples += ( Sample ){ getTarget( i ), ( ( qint16 )recvSample( i ) - inputOffset[ i ] ) / ioScale[ range ] };
 }
 void AtLPT_In::stop()
 {

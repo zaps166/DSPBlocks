@@ -1,7 +1,7 @@
 TEMPLATE = lib
 CONFIG += plugin
 
-DESTDIR = ../../App/share/DSPBlocks/blocks
+DESTDIR = ../../App/share/DSPBlocks
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 

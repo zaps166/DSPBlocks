@@ -35,6 +35,7 @@ private:
 	void paintEvent( QPaintEvent * );
 	void closeEvent( QCloseEvent *event );
 	void showEvent( QShowEvent *event );
+	void mouseMoveEvent( QMouseEvent *event );
 
 	DrawThr drawThr;
 

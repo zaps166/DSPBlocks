@@ -1,6 +1,8 @@
+class QSettings;
 class Block;
 
 #ifdef USE_ATLPT
+	#include "AtLPT_Settings.hpp"
 	#include "AtLPT_Out.hpp"
 	#include "AtLPT_In.hpp"
 #endif
@@ -11,7 +13,7 @@ class Block;
 
 #include <QList>
 
-extern const char groupName[] = "Real-time";
+extern const char groupName[] = "Real-Time";
 
 extern "C" QList< Block * > createBlocks()
 {
@@ -21,8 +23,14 @@ extern "C" QList< Block * > createBlocks()
 		<< new AtLPT_In
 #endif
 #ifdef USE_COMEDI
-//		<< new ComediOut
-//		<< new ComediIn
+		<< new ComediOut
+		<< new ComediIn
 #endif
 	;
+}
+
+extern "C" QList< QAction * >getActions( QSettings &settings )
+{
+	return QList< QAction * >()
+		<< ( new AtLPT_Settings( settings ) )->createAction();
 }

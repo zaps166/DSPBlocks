@@ -3,9 +3,8 @@
 
 #include <sys/io.h>
 
-static inline void sendSample( qint16 sample, quint8 chn )
+static inline void sendSample( quint16 sample, quint8 chn )
 {
-	sample += 0x1FF;
 	outb( ( chn << 7 ) | ( ( sample >> 6 ) & 0x0F ), EPP_DATA );
 	outb( sample << 2, EPP_DATA );
 }
@@ -21,20 +20,20 @@ bool AtLPT_Out::start()
 	if ( openDevice() )
 	{
 		settings->setRunMode( true );
-		buffer.reset( new qint16[ inputsCount() ]() );
+		buffer.reset( new quint16[ inputsCount() ]() );
 		return true;
 	}
 	return false;
 }
 void AtLPT_Out::setSample( int input, float sample )
 {
-	if ( sample > 1.0f )
-		sample = 1.0f;
-	else if ( sample < -1.0f )
-		sample = -1.0f;
-	else if ( sample != sample ) //NaN
-		sample = 0.0f;
-	buffer[ input ] = sample * 511.0;
+	const qint32 scaledSample = ( qint32 )( sample * ioScale[ range ] ) + outputOffset[ input ];
+	if ( scaledSample < 0 )
+		buffer[ input ] = 0;
+	else if ( scaledSample > 1023 )
+		buffer[ input ] = 1023;
+	else
+		buffer[ input ] = scaledSample;
 }
 void AtLPT_Out::exec( Array< Sample > & )
 {
@@ -43,6 +42,8 @@ void AtLPT_Out::exec( Array< Sample > & )
 }
 void AtLPT_Out::stop()
 {
+	for ( int i = 0 ; i < inputsCount() ; ++i )
+		sendSample( outputOffset[ i ], i ); //set outputs to 0
 	closeDevice();
 	buffer.reset();
 	settings->setRunMode( false );

@@ -74,22 +74,44 @@ MainWindow::MainWindow( QSettings &settings, QWidget *parent ) :
 
 	ui.graphicsView->setScene( &scene );
 
-	/* Ładowanie bloczków */
-	const QString blocksPath = qApp->property( "share" ).toString() + "/blocks";
-	foreach ( QString fName, QDir( blocksPath ).entryList( QStringList() << LIBS_FILTER ) )
+	/* Ładowanie pluginów */
+	const QString pluginsPath = qApp->property( "share" ).toString();
+	QList< QAction * > actions;
+	foreach ( QString fName, QDir( pluginsPath ).entryList( QStringList() << LIBS_FILTER ) )
 	{
-		QLibrary lib( blocksPath + '/' + fName );
+		QLibrary lib( pluginsPath + '/' + fName );
 		if ( !lib.load() )
 			qDebug() << lib.errorString();
 		else
 		{
+			typedef QList< QAction * >( *GetActions )( QSettings & );
 			typedef QList< Block * >( *CreateBlocks )();
+
 			CreateBlocks createBlocks = ( CreateBlocks )lib.resolve( "createBlocks" );
 			const char *groupName = ( const char * )lib.resolve( "groupName" );
-			if ( !createBlocks )
+			GetActions getActions = ( GetActions )lib.resolve( "getActions" );
+
+			if ( !createBlocks && !getActions )
 				lib.unload();
-			else foreach ( Block *block, createBlocks() )
-				ui.blocksW->addBlock( block, groupName );
+			else
+			{
+				if ( getActions ) //Ładowanie dodatków
+					foreach ( QAction *act, getActions( settings ) )
+						if ( act )
+						{
+							if ( !act->parentWidget() )
+								act->setParent( ui.menu_Dodatki );
+							else
+							{
+								act->parentWidget()->setParent( this );
+								act->parentWidget()->setWindowFlags( Qt::Window );
+							}
+							actions += act;
+						}
+				if ( createBlocks ) //Ładowanie bloczków
+					foreach ( Block *block, createBlocks() )
+						ui.blocksW->addBlock( block, groupName );
+			}
 		}
 	}
 	for ( int i = 0 ; i < 3 ; ++i )
@@ -103,34 +125,6 @@ MainWindow::MainWindow( QSettings &settings, QWidget *parent ) :
 
 	ui.splitter->setSizes( QList< int >() << 140 << width() - 140 );
 
-	/* Ładowanie dodatków */
-	QList< QAction * > actions;
-	const QString additionsPath = qApp->property( "share" ).toString() + "/additions";
-	foreach ( QString fName, QDir( additionsPath ).entryList( QStringList() << LIBS_FILTER ) )
-	{
-		QLibrary lib( additionsPath + '/' + fName );
-		if ( !lib.load() )
-			qDebug() << lib.errorString();
-		else
-		{
-			typedef QList< QAction * >( *GetActions )( QSettings & );
-			GetActions getActions = ( GetActions )lib.resolve( "getActions" );
-			if ( !getActions )
-				lib.unload();
-			else foreach ( QAction *act, getActions( settings ) )
-				if ( act )
-				{
-					if ( !act->parentWidget() )
-						act->setParent( ui.menu_Dodatki );
-					else
-					{
-						act->parentWidget()->setParent( this );
-						act->parentWidget()->setWindowFlags( Qt::Window );
-					}
-					actions += act;
-				}
-		}
-	}
 	if ( actions.isEmpty() )
 		ui.menu_Dodatki->deleteLater();
 	else
