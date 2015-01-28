@@ -185,15 +185,16 @@ MainWindow::~MainWindow()
 	settings.setValue( "RealTime/RtMode", Global::getRtMode() );
 #endif
 
-	if( thread.stop() )
+	if ( thread.stop() )
+	{
 		threadStopped();
+		qApp->quit();
+	}
 	else
 	{
 		qDebug().nospace() << "Wymuszenie zakończenia " << qApp->applicationName() << "...";
 		::raise( SIGTERM );
 	}
-
-	qApp->quit();
 }
 
 void MainWindow::threadStopped()

@@ -29,8 +29,10 @@ extern "C" QList< Block * > createBlocks()
 	;
 }
 
+#ifdef USE_ATLPT
 extern "C" QList< QAction * >getActions( QSettings &settings )
 {
 	return QList< QAction * >()
 		<< ( new AtLPT_Settings( settings ) )->createAction();
 }
+#endif

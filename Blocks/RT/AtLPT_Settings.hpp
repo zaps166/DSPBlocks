@@ -1,7 +1,7 @@
 #ifndef ATLPT_SETTINGS_HPP
 #define ATLPT_SETTINGS_HPP
 
-#include "ui_AtLPT_Calibrate.h"
+#include "ui_AtLPT_Settings.h"
 
 class QSettings;
 

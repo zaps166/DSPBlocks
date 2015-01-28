@@ -8,8 +8,6 @@ extern "C"
 	#include <libavutil/mem.h>
 }
 
-#include <QDebug>
-
 Image::Image() :
 	Block( "Image", "Generuje obraz", 0, 1, SOURCE ),
 	fftNbits( 10 )
@@ -17,12 +15,15 @@ Image::Image() :
 
 bool Image::start()
 {
+	bool ok = false;
 	settings->setRunMode( true );
 	if ( outputsCount() == 1 )
-		return fft_gen_img();
+		ok = fft_gen_img();
 	else if ( outputsCount() == 2 )
-		return xy_gen_img();
-	return false;
+		ok = xy_gen_img();
+	if ( !ok )
+		err = "Podaj właściwy plik obrazu";
+	return ok;
 }
 void Image::exec( Array< Sample > &samples )
 {
@@ -242,8 +243,9 @@ void ImageUI::prepare()
 
 void ImageUI::itemsVisible()
 {
-	fftSizeL->setVisible( block.outputsCount() == 1 );
-	fftSizeB->setVisible( fftSizeL->isVisible() );
+	const bool v = block.outputsCount() == 1;
+	fftSizeL->setVisible( v );
+	fftSizeB->setVisible( v );
 }
 
 void ImageUI::browseFile()
