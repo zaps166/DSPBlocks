@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>292</width>
-    <height>257</height>
+    <width>290</width>
+    <height>255</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,21 +35,21 @@
       <item>
        <widget class="QRadioButton" name="standardRangeB">
         <property name="text">
-         <string>[-1.0 .. +1.0]</string>
+         <string>[-1.&amp;0 .. +1.0]</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QRadioButton" name="voltageRangeB">
         <property name="text">
-         <string>[-5V .. +5V]</string>
+         <string>[-&amp;5V .. +5V]</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QRadioButton" name="integerRangeB">
         <property name="text">
-         <string>10bit integer</string>
+         <string>&amp;10bit integer</string>
         </property>
        </widget>
       </item>
@@ -199,6 +199,15 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>inChn1B</tabstop>
+  <tabstop>inChn2B</tabstop>
+  <tabstop>outChn1B</tabstop>
+  <tabstop>outChn2B</tabstop>
+  <tabstop>standardRangeB</tabstop>
+  <tabstop>voltageRangeB</tabstop>
+  <tabstop>integerRangeB</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
