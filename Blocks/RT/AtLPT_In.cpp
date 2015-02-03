@@ -13,7 +13,8 @@ static inline quint16 recvSample( quint8 chn )
 /**/
 
 AtLPT_In::AtLPT_In() :
-	AtLPT( "AtLPT input", "Wejście sygnału dla urządzenia AtLPT", 0, 1, SOURCE )
+	AtLPT( "AtLPT input", "Wejście sygnału dla urządzenia AtLPT", 0, 1, SOURCE ),
+	isOpen( false )
 {}
 
 bool AtLPT_In::start()
@@ -21,7 +22,7 @@ bool AtLPT_In::start()
 	if ( openDevice() )
 	{
 		settings->setRunMode( true );
-		return true;
+		return ( isOpen = true );
 	}
 	return false;
 }
@@ -32,8 +33,12 @@ void AtLPT_In::exec( Array< Block::Sample > &samples )
 }
 void AtLPT_In::stop()
 {
-	settings->setRunMode( false );
-	closeDevice();
+	if ( isOpen )
+	{
+		settings->setRunMode( false );
+		closeDevice();
+		isOpen = false;
+	}
 }
 
 Block *AtLPT_In::createInstance()

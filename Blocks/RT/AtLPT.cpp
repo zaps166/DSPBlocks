@@ -8,8 +8,7 @@ AtLPT::Range AtLPT::range = AtLPT::StandardRange;
 float AtLPT::ioScale[ AtLPT::RangeMAX ] = { 511.0f, 102.2f, 1.0f };
 
 AtLPT::AtLPT( const QString &name, const QString &description, int numInputs, int numOutputs, Block::Type type ) :
-	Block( name, description, numInputs, numOutputs, type ),
-	isOpen( false )
+	Block( name, description, numInputs, numOutputs, type )
 {}
 
 bool AtLPT::openDevice()
@@ -41,28 +40,24 @@ bool AtLPT::openDevice()
 		default:
 			break;
 	}
-	isOpen = true;
 	return true;
 }
 void AtLPT::closeDevice()
 {
-	if ( isOpen )
+	switch ( getType() )
 	{
-		switch ( getType() )
-		{
-			case SOURCE:
-				input = false;
-				break;
-			case SINK:
-				output = false;
-				break;
-			default:
-				break;
-		}
-		if ( !input && !output )
-		{
-			ioperm( LPT_BASEADDR, 5, false );
-			isLPTOpen = false;
-		}
+		case SOURCE:
+			input = false;
+			break;
+		case SINK:
+			output = false;
+			break;
+		default:
+			break;
+	}
+	if ( !input && !output )
+	{
+		ioperm( LPT_BASEADDR, 5, false );
+		isLPTOpen = false;
 	}
 }

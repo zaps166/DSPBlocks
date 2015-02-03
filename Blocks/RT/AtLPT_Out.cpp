@@ -12,7 +12,8 @@ static inline void sendSample( quint16 sample, quint8 chn )
 /**/
 
 AtLPT_Out::AtLPT_Out() :
-	AtLPT( "AtLPT output", "Wyjście sygnału dla urządzenia AtLPT", 1, 0, SINK )
+	AtLPT( "AtLPT output", "Wyjście sygnału dla urządzenia AtLPT", 1, 0, SINK ),
+	isOpen( false )
 {}
 
 bool AtLPT_Out::start()
@@ -21,7 +22,7 @@ bool AtLPT_Out::start()
 	{
 		settings->setRunMode( true );
 		buffer.reset( new quint16[ inputsCount() ]() );
-		return true;
+		return ( isOpen = true );
 	}
 	return false;
 }
@@ -42,11 +43,15 @@ void AtLPT_Out::exec( Array< Sample > & )
 }
 void AtLPT_Out::stop()
 {
-	for ( int i = 0 ; i < inputsCount() ; ++i )
-		sendSample( outputOffset[ i ], i ); //set outputs to 0
-	closeDevice();
-	buffer.reset();
-	settings->setRunMode( false );
+	if ( isOpen )
+	{
+		for ( int i = 0 ; i < inputsCount() ; ++i )
+			sendSample( outputOffset[ i ], i ); //set outputs to 0
+		closeDevice();
+		buffer.reset();
+		settings->setRunMode( false );
+		isOpen = false;
+	}
 }
 
 Block *AtLPT_Out::createInstance()

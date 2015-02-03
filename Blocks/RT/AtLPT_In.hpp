@@ -13,6 +13,8 @@ public:
 	void stop();
 
 	Block *createInstance();
+private:
+	bool isOpen;
 };
 
 #endif // ATLPT_IN_HPP

@@ -24,8 +24,6 @@ public:
 
 	bool openDevice();
 	void closeDevice();
-private:
-	bool isOpen;
 };
 
 #endif // ATLPT_HPP

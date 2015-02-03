@@ -60,10 +60,6 @@ public:
 		}
 		return false;
 	}
-//	inline void setInputsDone()
-//	{
-//		inputsDone = inputsConnected-1;
-//	}
 
 	virtual bool start() = 0;
 	virtual void setSample( int input, float sample ) { Q_UNUSED( input ) Q_UNUSED( sample ) }

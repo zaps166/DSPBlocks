@@ -16,6 +16,7 @@ public:
 	Block *createInstance();
 private:
 	QScopedArrayPointer< quint16 > buffer;
+	bool isOpen;
 };
 
 #endif // ATLPT_OUT_HPP

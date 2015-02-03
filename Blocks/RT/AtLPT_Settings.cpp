@@ -2,10 +2,6 @@
 #include "AtLPT.hpp"
 
 #include <QSettings>
-#include <QDebug>
-
-//	static const qint16 inputOffset[ 2 ] = { 512, 509 };
-//	static const qint16 outputOffset[ 2 ] = { 508, 509 };
 
 AtLPT_Settings::AtLPT_Settings( QSettings &settings ) :
 	settings( settings )
