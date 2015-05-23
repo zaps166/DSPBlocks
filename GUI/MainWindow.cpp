@@ -11,6 +11,7 @@
 #endif
 #include <QCloseEvent>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QSettings>
 #include <QLibrary>
 #include <QDebug>

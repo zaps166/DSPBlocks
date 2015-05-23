@@ -2,6 +2,7 @@
 
 #include <QDragEnterEvent>
 #include <QWheelEvent>
+#include <QMimeData>
 
 void SchemeView::dragEnterEvent( QDragEnterEvent *event )
 {
