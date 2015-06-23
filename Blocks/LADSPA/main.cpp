@@ -37,7 +37,9 @@ extern "C" QList< Block * > createBlocks()
 		foreach ( const QString &fName, QDir( ladspa_path ).entryList( libFilter ) )
 		{
 			QLibrary lib( ladspa_path + "/" + fName );
-			if ( lib.load() )
+			if ( !lib.load() )
+				qDebug() << lib.errorString();
+			else
 			{
 				LADSPA_Descriptor_Function ladspa_descriptor = ( LADSPA_Descriptor_Function )lib.resolve( "ladspa_descriptor" );
 				if ( !ladspa_descriptor )
