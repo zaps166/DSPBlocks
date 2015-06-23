@@ -267,7 +267,7 @@ ScopeUI::ScopeUI( Scope &block ) :
 	AdditionalSettings( block ),
 	block( block )
 {
-	QLabel *samplesVisibleL = new QLabel( "Ilość widocznych próbek: " );
+	QLabel *samplesVisibleL = new QLabel( "Liczba widocznych próbek: " );
 	samplesVisibleL->setAlignment( Qt::AlignRight );
 
 	QLabel *interpolationL = new QLabel( "Interpolacja: " );

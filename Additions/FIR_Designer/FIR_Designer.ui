@@ -105,7 +105,7 @@
    <item row="3" column="0" colspan="2">
     <widget class="QSpinBox" name="numCoeffB">
      <property name="prefix">
-      <string>Ilość współczynników: </string>
+      <string>Liczba współczynników: </string>
      </property>
      <property name="minimum">
       <number>5</number>

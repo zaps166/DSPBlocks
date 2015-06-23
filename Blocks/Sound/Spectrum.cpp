@@ -277,7 +277,7 @@ SpectrumUI::SpectrumUI( Spectrum &block ) :
 	spectogramB = new QCheckBox( "Spektogram" );
 
 	numSpectrumsB = new QSpinBox;
-	numSpectrumsB->setPrefix( "Ilość kawałków: " );
+	numSpectrumsB->setPrefix( "Liczba kawałków: " );
 	numSpectrumsB->setRange( 1, 9999 );
 
 	scaleB = new QDoubleSpinBox;

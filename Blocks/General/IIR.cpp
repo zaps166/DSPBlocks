@@ -205,7 +205,7 @@ void IIR_UI::setFilter()
 				coeff[ j ].append( 0.0 );
 		}
 
-		/* Ilość współczynników A musi być taka sama jak współczynników B */
+		/* Liczba współczynników A musi być taka sama jak współczynników B */
 		if ( coeff[ 0 ].count() > coeff[ 1 ].count() )
 			coeff[ 1 ].resize( coeff[ 0 ].count() );
 		else if ( coeff[ 1 ].count() > coeff[ 0 ].count() )

@@ -129,7 +129,7 @@ CounterUI::CounterUI( Counter &block ) :
 	slopeCB->addItems( QStringList() << "Zbocze narastające" << "Zbocze opadające" << "Oba zbocza" );
 
 	modeCB = new QComboBox;
-	modeCB->addItems( QStringList() << "Wystaw na wyjściu ilość zliczonych impulsów" << "Wystaw na wyjściu impuls przy przepełnieniu" );
+	modeCB->addItems( QStringList() << "Wystaw na wyjściu liczbę zliczonych impulsów" << "Wystaw na wyjściu impuls przy przepełnieniu" );
 
 	cntValB = new QSpinBox;
 	cntValB->setPrefix( "Zliczaj do: " );

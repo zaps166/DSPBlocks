@@ -206,7 +206,7 @@ void FIR_Designer::calcKaiserBeta()
 		ui.windFuncW->setKaiserBeta( 0.1102 * ( a - 8.7 ) );
 	int numCoeff = m + 1;
 	if ( numCoeff > ui.numCoeffB->maximum() )
-		QMessageBox::information( this, "Okno Kaisera", "Za duża ilość współczynników, filtr będzie nieprawidłowy.\nZmień parametry!" );
+		QMessageBox::information( this, "Okno Kaisera", "Za duża liczba współczynników, filtr będzie nieprawidłowy.\nZmień parametry!" );
 	ui.numCoeffB->setValue( m + 1 );
 	on_numCoeffB_editingFinished(); /* Żeby była nieparzysta liczba współczynników wtedy, kiedy trzeba */
 }
