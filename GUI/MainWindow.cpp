@@ -22,10 +22,11 @@
 #include <signal.h>
 
 #ifndef Q_OS_WIN
-	#define UNIX_CDUP "/.."
 	#ifndef Q_OS_MAC
+		#define UNIX_CDUP "/.."
 		#define LIBS_FILTER "lib*.so"
 	#else
+		#define UNIX_CDUP
 		#define LIBS_FILTER "lib*.dylib"
 	#endif
 #else
@@ -61,7 +62,7 @@ MainWindow::MainWindow( QSettings &settings, QWidget *parent ) :
 	lastRealSampleRate = -1;
 #endif
 
-	qApp->setProperty( "share", qApp->applicationDirPath() + UNIX_CDUP"/share/DSPBlocks" );
+	qApp->setProperty( "DSPBlocksDir", qApp->applicationDirPath() + UNIX_CDUP"/lib/DSPBlocks" );
 
 	ui.actionNowy->setIcon( QIcon::fromTheme( "document-new" ) );
 	ui.actionOtw_rz->setIcon( QIcon::fromTheme( "project-open" ) );
@@ -76,9 +77,9 @@ MainWindow::MainWindow( QSettings &settings, QWidget *parent ) :
 	ui.graphicsView->setScene( &scene );
 
 	/* Ładowanie pluginów */
-	const QString pluginsPath = qApp->property( "share" ).toString();
+	const QString pluginsPath = qApp->property( "DSPBlocksDir" ).toString();
 	QList< QAction * > actions;
-	foreach ( QString fName, QDir( pluginsPath ).entryList( QStringList() << LIBS_FILTER ) )
+	foreach ( const QString &fName, QDir( pluginsPath ).entryList( QStringList() << LIBS_FILTER ) )
 	{
 		QLibrary lib( pluginsPath + '/' + fName );
 		if ( !lib.load() )
@@ -498,7 +499,7 @@ void MainWindow::closeEvent( QCloseEvent *event )
 }
 void MainWindow::dragEnterEvent( QDragEnterEvent *event )
 {
-	if ( event && event->mimeData() && event->mimeData()->hasUrls() )
+	if ( ui.actionOtw_rz->isEnabled() && event && event->mimeData() && event->mimeData()->hasUrls() )
 	{
 		const QString url = event->mimeData()->urls().first().toLocalFile();
 		if ( url.toLower().endsWith( ".dblcks" ) )

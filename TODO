@@ -1,5 +1,3 @@
-Jeżeli są bloczki blokujące - powiadomić, że tryb nieblokujący jest niemożliwy
-
 Sterowanie urządzeniami (COMEDI, LPT, GPIO)
 Poprawić algorytm (np. na przerzutniku RS)
 Badanie charakterystyki filtrów

@@ -10,15 +10,17 @@ TEMPLATE = app
 TARGET = DSPBlocks
 
 CONFIG += console
+CONFIG -= app_bundle
 
-win32: DESTDIR = ../App
-else:  DESTDIR = ../App/bin
-
-win32: QMAKE_LIBDIR += ../App
+win32|macx {
+	DESTDIR = ../App
+	QMAKE_LIBDIR += ../App
+}
 else {
-	!mac: QMAKE_LFLAGS += -Wl,-rpath=\'\$\$ORIGIN\'/../lib
+	DESTDIR = ../App/bin
 	QMAKE_LIBDIR += ../App/lib
-	LIBS += -lrt
+	QMAKE_LFLAGS += -Wl,-rpath=\'\$\$ORIGIN\'/../lib
+	LIBS += -lrt #For old OS
 }
 LIBS += -lDSPBlocks
 
@@ -26,7 +28,7 @@ SOURCES += main.cpp MainWindow.cpp BlocksTree.cpp SchemeView.cpp SimSettings.cpp
 HEADERS +=          MainWindow.hpp BlocksTree.hpp SchemeView.hpp SimSettings.hpp
 FORMS   +=          MainWindow.ui                                SimSettings.ui
 
-linux*: {
+linux* {
 	SOURCES += RTSettings.cpp
 	HEADERS += RTSettings.hpp
 	FORMS   += RTSettings.ui

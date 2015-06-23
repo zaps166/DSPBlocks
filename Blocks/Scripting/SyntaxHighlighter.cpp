@@ -52,7 +52,7 @@ void SyntaxHighlighter::highlightBlock( const QString &text )
 	}
 
 	for ( int i = 0 ; i < toHighlight.count() ; ++i )
-		foreach ( QString t, toHighlight[ i ].first )
+		foreach ( const QString &t, toHighlight[ i ].first )
 		{
 			int idx = -1;
 			while ( ( idx = txt.indexOf( t, idx + 1 ) ) > -1 )

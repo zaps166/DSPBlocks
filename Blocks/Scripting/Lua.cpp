@@ -5,7 +5,12 @@
 #include <QMessageBox>
 #include <QDebug>
 
-#include <lua.hpp>
+extern "C"
+{
+	#include <lua.h>
+	#include <lauxlib.h>
+	#include <lualib.h>
+}
 
 #if LUA_VERSION_NUM < 502
 	#define lua_rawlen lua_objlen

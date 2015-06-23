@@ -38,8 +38,8 @@ bool Spectrum::start()
 {
 	settings->setRunMode( true );
 	cantClose = true;
-	QWidget::show();
 	setFFT();
+	QWidget::show();
 	drawThr.start();
 	return true;
 }

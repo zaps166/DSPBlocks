@@ -9,13 +9,13 @@ extern const char groupName[] = "LADSPA";
 
 extern "C" QList< Block * > createBlocks()
 {
-	QStringList possibleDirs = QStringList() << qApp->property( "share" ).toString() + "/ladspa" << QDir::cleanPath( getenv( "LADSPA_PATH" ) );
+	QStringList possibleDirs = QStringList() << qApp->property( "DSPBlocksDir" ).toString() + "/ladspa" << QDir::cleanPath( getenv( "LADSPA_PATH" ) );
 #ifdef Q_OS_UNIX
 	possibleDirs << ( sizeof( void * ) == 8 ? "/usr/lib64/ladspa" : "/usr/lib/ladspa" );
 #endif
 
 	QString ladspa_path;
-	foreach ( QString dir, possibleDirs )
+	foreach ( const QString &dir, possibleDirs )
 		if ( QFileInfo( dir ).isDir() )
 		{
 			ladspa_path = dir;
@@ -27,15 +27,14 @@ extern "C" QList< Block * > createBlocks()
 	{
 		QStringList libFilter;
 #ifndef Q_OS_WIN
-	#ifndef Q_OS_MAC
-		libFilter << "*.so";
-	#else
+	#ifdef Q_OS_MAC
 		libFilter << "*.dylib";
 	#endif
+		libFilter << "*.so";
 #else
 		libFilter << "*.dll";
 #endif
-		foreach ( QString fName, QDir( ladspa_path ).entryList( libFilter ) )
+		foreach ( const QString &fName, QDir( ladspa_path ).entryList( libFilter ) )
 		{
 			QLibrary lib( ladspa_path + "/" + fName );
 			if ( lib.load() )

@@ -2,7 +2,7 @@
 #define RINGBUFFER_HPP
 
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 
 template < typename T > class RingBuffer
 {

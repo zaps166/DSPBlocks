@@ -5,10 +5,14 @@
 
 #include <math.h>
 
-#ifndef Q_OS_WIN
-	#include <time.h>
-#else
+#ifdef Q_OS_WIN
 	#include <windows.h>
+#else
+	#ifdef Q_OS_MAC
+		#include <mach/mach_time.h>
+	#else
+		#include <time.h>
+	#endif
 #endif
 
 #define DEFAULT_SAMPLERATE 48000
@@ -25,15 +29,26 @@ class Global
 public:
 	static inline qint64 gettime()
 	{
-#ifndef Q_OS_WIN
-		timespec now;
-		clock_gettime( CLOCK_MONOTONIC, &now );
-		return now.tv_sec * 1000000000LL + now.tv_nsec;
-#else
+#if defined Q_OS_WIN
 		LARGE_INTEGER Frequency, Counter;
 		QueryPerformanceFrequency( &Frequency );
 		QueryPerformanceCounter( &Counter );
-		return Counter.QuadPart * 1000000000LL / Frequency.QuadPart;
+		return 1000000000.0 * ( ( double )Counter.QuadPart / ( double )Frequency.QuadPart ); //64bit integer can overflow
+#elif defined Q_OS_MAC
+		mach_timebase_info_data_t mach_base_info;
+		mach_timebase_info( &mach_base_info );
+		return ( mach_absolute_time() * mach_base_info.numer ) / mach_base_info.denom;
+#else
+		timespec now;
+		clock_gettime(
+		#ifdef CLOCK_MONOTONIC_RAW
+			CLOCK_MONOTONIC_RAW,
+		#else
+			CLOCK_MONOTONIC,
+		#endif
+			&now
+		);
+		return now.tv_sec * 1000000000LL + now.tv_nsec;
 #endif
 	}
 

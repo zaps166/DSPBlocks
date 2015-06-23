@@ -1,7 +1,7 @@
 TEMPLATE = lib
 CONFIG += plugin
 
-DESTDIR = ../../App/share/DSPBlocks
+DESTDIR = ../../App/lib/DSPBlocks
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -16,7 +16,7 @@ HEADERS +=          FIR_Designer.hpp
 SOURCES += main.cpp FIR_Designer.cpp
 FORMS   +=          FIR_Designer.ui
 
-win32: {
+win32|macx {
 	QMAKE_LIBDIR += ../../App
 	LIBS += -lDSPBlocks
 }

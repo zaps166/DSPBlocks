@@ -1,7 +1,7 @@
 TEMPLATE = lib
 CONFIG += plugin
 
-DESTDIR = ../../App/share/DSPBlocks
+DESTDIR = ../../App/lib/DSPBlocks
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -14,7 +14,10 @@ DEPENDPATH  += . ../../Lib
 HEADERS +=          FFMpegIn.hpp Spectrum.hpp Image.hpp
 SOURCES += main.cpp FFMpegIn.cpp Spectrum.cpp Image.cpp
 
-!win32: CONFIG += link_pkgconfig
+!win32 {
+	macx: QT_CONFIG -= no-pkg-config
+	CONFIG += link_pkgconfig
+}
 if ( win32|packagesExist(portaudio-2.0) ) {
 	HEADERS += PortAudioOut.hpp PortAudioIn.hpp PortAudio.hpp
 	SOURCES += PortAudioOut.cpp PortAudioIn.cpp PortAudio.cpp
@@ -27,16 +30,19 @@ if ( win32|packagesExist(portaudio-2.0) ) {
 #SOURCES += Equalizer.cpp
 
 DEFINES += __STDC_CONSTANT_MACROS
-LIBS += -lavformat -lavcodec -lavutil -lswresample
 
-linux*: {
+win32: LIBS += -lavformat -lavcodec -lavutil -lswresample
+else : PKGCONFIG += libavformat libavcodec libavutil libswresample
+
+linux* {
 	HEADERS += AlsaOut.hpp AlsaIn.hpp Alsa.hpp
 	SOURCES += AlsaOut.cpp AlsaIn.cpp Alsa.cpp
 	DEFINES += USE_ALSA
 	LIBS += -lasound
 }
 
-win32: {
+win32|macx {
 	QMAKE_LIBDIR += ../../App
-	LIBS += -lDSPBlocks -lwinmm -luuid
+	LIBS += -lDSPBlocks
 }
+win32: LIBS += -lwinmm -luuid

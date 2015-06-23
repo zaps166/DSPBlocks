@@ -1,7 +1,7 @@
 TEMPLATE = lib
 CONFIG += plugin
 
-DESTDIR = ../../App/share/DSPBlocks
+DESTDIR = ../../App/lib/DSPBlocks
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -14,7 +14,7 @@ DEPENDPATH  += . ../../Lib
 HEADERS +=          LADSPA.hpp ladspa.h
 SOURCES += main.cpp LADSPA.cpp
 
-win32: {
+win32|macx {
 	QMAKE_LIBDIR += ../../App
 	LIBS += -lDSPBlocks
 }
