@@ -165,8 +165,9 @@ void RMS_UI::setValue( int v )
 void RMS_UI::setMode( int m )
 {
 	block.mode = m;
-	for ( int i = 0 ; i < block.inputsCount() ; ++i )
-		block.partial_result[ i ] = 0.0f;
+	if ( block.partial_result )
+		for ( int i = 0 ; i < block.inputsCount() ; ++i )
+			block.partial_result[ i ] = 0.0f;
 	block.pos = 0;
 	block.setLabel();
 }
