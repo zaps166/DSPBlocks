@@ -40,14 +40,7 @@ public:
 		return ( mach_absolute_time() * mach_base_info.numer ) / mach_base_info.denom;
 #else
 		timespec now;
-		clock_gettime(
-		#ifdef CLOCK_MONOTONIC_RAW
-			CLOCK_MONOTONIC_RAW,
-		#else
-			CLOCK_MONOTONIC,
-		#endif
-			&now
-		);
+		clock_gettime( CLOCK_MONOTONIC, &now );
 		return now.tv_sec * 1000000000LL + now.tv_nsec;
 #endif
 	}
