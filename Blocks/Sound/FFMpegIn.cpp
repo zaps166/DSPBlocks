@@ -267,7 +267,7 @@ Block *FFMpegIn::createInstance()
 {
 	FFMpegIn *block = new FFMpegIn;
 	block->settings = new Settings( *block, false, 0, 0, true, 1, maxIO, false, new FFMpegInUI( *block ) );
-	block->settings->resize( 500, 0 );
+	block->settings->resize( 500, 1 );
 	return block;
 }
 
