@@ -3,21 +3,21 @@
 
 #include <QScriptEngine>
 
-#define WindCosine( a ) "Math.cos( "a" * Math.PI * n / ( N - 1.0 ) )"
+#define WindCosine( a ) "Math.cos( " a " * Math.PI * n / ( N - 1.0 ) )"
 
 const QStringList WindFunc::windFunc = QStringList()
 		<< "1.0"
 		<< "1.0 - Math.pow( ( n - ( N - 1 ) / 2.0 ) / ( ( N + 1.0 ) / 2 ), 2.0 )"
-		<< "0.53836 - 0.46164 * "WindCosine( "2.0" )
-		<< "0.5 * ( 1.0 - "WindCosine( "2.0" )" )"
+		<< "0.53836 - 0.46164 * " WindCosine( "2.0" )
+		<< "0.5 * ( 1.0 - " WindCosine( "2.0" )" )"
 		<< "1.0 - Math.abs( ( n - ( N - 1 ) / 2.0 ) / ( ( N - 1 ) / 2.0 ) )"
 		<< "1.0 - Math.abs( ( n - ( N - 1 ) / 2.0 ) / ( N / 2.0 ) )"
-		<< "0.62 - 0.48 * Math.abs( n / ( N - 1 ) - 0.5 ) - 0.38 * "WindCosine( "2.0" )
-		<< "0.42 - 0.5 * "WindCosine( "2.0" )" + 0.08 * "WindCosine( "4.0" )
-		<< "0.355768 - 0.487396 * "WindCosine( "2.0" )" + 0.144232 * "WindCosine( "4.0" )" - 0.012604 * "WindCosine( "6.0" )
-		<< "0.35875 - 0.48829 * "WindCosine( "2.0" )" + 0.14128 * "WindCosine( "4.0" )" - 0.01168 * "WindCosine( "6.0" )
-		<< "0.3635819 - 0.4891775 * "WindCosine( "2.0" )" + 0.1365995 * "WindCosine( "4.0" )" - 0.0106411 * "WindCosine( "6.0" )
-		<< "1.0 - 1.93 * "WindCosine( "2.0" )" + 1.29 * "WindCosine( "4.0" )" - 0.338 * "WindCosine( "6.0" )" + 0.032 * "WindCosine( "8.0" );
+		<< "0.62 - 0.48 * Math.abs( n / ( N - 1 ) - 0.5 ) - 0.38 * " WindCosine( "2.0" )
+		<< "0.42 - 0.5 * " WindCosine( "2.0" )" + 0.08 * " WindCosine( "4.0" )
+		<< "0.355768 - 0.487396 * " WindCosine( "2.0" )" + 0.144232 * " WindCosine( "4.0" )" - 0.012604 * " WindCosine( "6.0" )
+		<< "0.35875 - 0.48829 * " WindCosine( "2.0" )" + 0.14128 * " WindCosine( "4.0" )" - 0.01168 * " WindCosine( "6.0" )
+		<< "0.3635819 - 0.4891775 * " WindCosine( "2.0" )" + 0.1365995 * " WindCosine( "4.0" )" - 0.0106411 * " WindCosine( "6.0" )
+		<< "1.0 - 1.93 * " WindCosine( "2.0" )" + 1.29 * " WindCosine( "4.0" )" - 0.338 * " WindCosine( "6.0" )" + 0.032 * " WindCosine( "8.0" );
 
 QVector< double > WindFunc::windowFunctionCoefficients( const QString &code, int N, QString *err )
 {
