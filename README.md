@@ -1,3 +1,3 @@
 DSP Blocks
 ===========
-![logo](http://zaps166.sourceforge.net/DSPBlocks.png)
+![Screenshot](http://zaps166.sourceforge.net/gh-imgs/DSPBlocks-screenshot.png)
