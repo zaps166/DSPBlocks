@@ -1,3 +1,3 @@
 DSP Blocks
 ===========
-![Screenshot](http://zaps166.sourceforge.net/gh-imgs/DSPBlocks-screenshot.png)
+![Screenshot](https://raw.githubusercontent.com/zaps166/GitHubCommonContents/master/Screenshots/DSPBlocks.png)
