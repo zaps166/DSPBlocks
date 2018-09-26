@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QClipboard>
 #include <QSettings>
+#include <QAction>
 #include <QDebug>
 
 #include <math.h>
