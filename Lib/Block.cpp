@@ -3,8 +3,8 @@
 #include "Settings.hpp"
 
 #include <QGraphicsSceneEvent>
-#include <QCoreApplication>
 #include <QGraphicsScene>
+#include <QApplication>
 #include <QMimeData>
 #include <QPainter>
 #include <QDebug>
@@ -88,10 +88,17 @@ quint8 Block::calcConnectedInputs()
 
 QPixmap Block::createPixmap()
 {
-	QPixmap pixmap( prostokat.size().toSize() + QSize( 1, 1 ) );
+	qreal dpr = 1.0;
+#if QT_VERSION >= 0x050600
+	dpr = qApp->devicePixelRatio();
+#endif
+	QPixmap pixmap( ( dpr * ( prostokat.size() + QSizeF( 1, 1 ) ) ).toSize() );
+#if QT_VERSION >= 0x050600
+	pixmap.setDevicePixelRatio( dpr );
+#endif
 	pixmap.fill( Qt::white );
 	QPainter p( &pixmap );
-	p.translate( -prostokat.topLeft() );
+	p.translate( -prostokat.topLeft() + QPointF( 0.5, 0.5 ) );
 	paint( &p, NULL, NULL );
 	return pixmap;
 }

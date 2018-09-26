@@ -12,6 +12,10 @@ int main( int argc, char *argv[] )
 	QTextCodec::setCodecForCStrings( QTextCodec::codecForName( "UTF-8" ) );
 #endif
 
+#if QT_VERSION > 0x050600
+	QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+#endif
+
 	QApplication app( argc, argv );
 	app.setQuitOnLastWindowClosed( false );
 
